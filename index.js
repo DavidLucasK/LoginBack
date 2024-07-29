@@ -5,7 +5,9 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+    origin: 'https://logindl.vercel.app', // Substitua pelo domínio do seu frontend
+}));
 app.use(express.json());
 
 const authRoutes = require('./auth');
