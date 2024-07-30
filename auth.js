@@ -127,10 +127,10 @@ router.post('/forgot', async (req, res) => {
         transporter.sendMail(mailOptions, (err, info) => {
             if (err) {
                 console.error('Erro ao enviar e-mail:', err);
-                return res.status(500).json({ message: 'Erro ao enviar e-mail' });
+                return res.status(500).json({ message: 'Erro ao enviar e-mail!' });
             } else {
                 console.log('E-mail enviado:', info.response);
-                return res.status(200).json({ message: 'E-mail enviado com sucesso' });
+                return res.status(200).json({ message: 'E-mail enviado com sucesso!' });
             }
         });
     } catch (err) {
