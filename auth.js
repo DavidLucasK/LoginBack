@@ -55,18 +55,21 @@ router.post('/login', async (req, res) => {
             .eq('email', email)
             .single();
 
-        if (error) {
+        if (error && error.code === 'PGRST116') {
+            // Se o erro for "PGRST116" significa que não encontrou o usuário
+            return res.status(400).json({ message: `Senha incorreta para ${email}` });
+        } else if (error) {
             throw error;
         }
 
         if (!user) {
-            return res.status(400).json({ message: 'Email ou senha incorretos' });
+            return res.status(400).json({ message: `Senha incorreta para ${email}` });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(400).json({ message: 'Email ou senha incorretos' });
+            return res.status(400).json({ message: `Senha incorreta para ${email}` });
         }
 
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -79,6 +82,3 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
-
-console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
-console.log('SUPABASE_KEY:', process.env.SUPABASE_KEY);
