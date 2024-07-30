@@ -143,7 +143,7 @@ router.post('/reset', async (req, res) => {
         console.log('Email:', email);
         console.log('Token:', token);
 
-        // Obtém o último token de redefinição de senha para o e-mail
+        // Consulta ao banco de dados para encontrar o registro de redefinição de senha mais recente
         const { data: resetRequests, error: resetError } = await supabase
             .from('password_resets')
             .select('*')
@@ -152,20 +152,21 @@ router.post('/reset', async (req, res) => {
             .limit(1)
             .single();
 
-        console.log('Dados retornados da consulta de redefinição de senha:', resetRequests);
-        console.log('Erro na consulta de redefinição de senha:', resetError);
-
         if (resetError) {
+            console.error('Erro na consulta de redefinição de senha:', resetError);
             return res.status(500).json({ message: 'Erro ao consultar o banco de dados' });
         }
 
         if (!resetRequests) {
+            console.log('Usuário não encontrado ou token inválido');
             return res.status(400).json({ message: 'Usuário não encontrado ou token inválido' });
         }
 
-        // Verifica se o token é o mais recente
-        const resetRequest = resetRequests;
-        if (resetRequest.token !== token) {
+        console.log('Dados retornados da consulta de redefinição de senha:', resetRequests);
+
+        // Verifica se o token é válido
+        if (resetRequests.token !== token) {
+            console.log('Token inválido');
             return res.status(400).json({ message: 'Token inválido' });
         }
 
@@ -176,9 +177,8 @@ router.post('/reset', async (req, res) => {
             .update({ password: hashedPassword })
             .eq('email', email);
 
-        console.log('Erro ao atualizar a senha do usuário:', updateError);
-
         if (updateError) {
+            console.error('Erro ao atualizar a senha do usuário:', updateError);
             return res.status(500).json({ message: 'Erro ao atualizar a senha' });
         }
 
@@ -189,10 +189,8 @@ router.post('/reset', async (req, res) => {
             .eq('email', email)
             .eq('token', token);
 
-        // Logs para depuração
-        console.log('Erro ao remover o token:', deleteError);
-
         if (deleteError) {
+            console.error('Erro ao remover o token:', deleteError);
             return res.status(500).json({ message: 'Erro ao remover o token de redefinição' });
         }
 
@@ -202,6 +200,15 @@ router.post('/reset', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
+const { data, error } = await supabase
+    .from('password_resets')
+    .select('*')
+    .limit(1)
+    .single();
+
+console.log('Dados:', data);
+console.error('Erro:', error);
 
 
 module.exports = router;
