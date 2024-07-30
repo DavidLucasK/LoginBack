@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Configura o transporte de e-mail
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // Ou 'smtp' se estiver usando outro servidor SMTP
+    service: 'gmail',
     auth: {
         user: process.env.EMAIL,
         pass: process.env.EMAIL_PASSWORD,
@@ -148,7 +148,7 @@ router.post('/reset', async (req, res) => {
             .limit(1)
             .single();
 
-        if (resetError || !resetRequests) {
+        if (resetError) {
             return res.status(400).json({ message: 'Usuário não encontrado ou token inválido' });
         }
 
