@@ -1,6 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 
 const router = express.Router();
@@ -77,6 +79,102 @@ router.post('/login', async (req, res) => {
         res.json({ token, message: 'Login bem-sucedido!' });
     } catch (err) {
         console.error('Erro ao fazer login:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+// Endpoint para solicitar redefinição de senha
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error || !user) {
+            return res.status(400).json({ message: 'Usuário não encontrado' });
+        }
+
+        // Gera um token de redefinição de senha
+        const token = crypto.randomBytes(32).toString('hex');
+
+        // Salva o token no banco de dados
+        await supabase
+            .from('password_resets')
+            .insert([{ email, token, created_at: new Date() }]);
+
+        // Configura o transporte de e-mail
+        const transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.EMAIL_PASSWORD,
+            },
+        });
+
+        // Configura o e-mail
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Redefinição de Senha',
+            text: `Você solicitou a redefinição de senha da sua conta. Clique no link para redefinir: ${process.env.FRONTEND_URL}/reset-password.html?token=${token}&email=${email}`,
+        };
+
+        // Envia o e-mail
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                return res.status(500).json({ message: 'Erro ao enviar e-mail' });
+            } else {
+                return res.status(200).json({ message: 'E-mail enviado com sucesso' });
+            }
+        });
+    } catch (err) {
+        console.error('Erro ao solicitar redefinição de senha:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+// Endpoint para redefinir a senha
+router.post('/reset-password', async (req, res) => {
+    const { email, token, newPassword } = req.body;
+
+    try {
+        // Verifica o token
+        const { data: resetRequest, error } = await supabase
+            .from('password_resets')
+            .select('*')
+            .eq('email', email)
+            .eq('token', token)
+            .single();
+
+        if (error || !resetRequest) {
+            return res.status(400).json({ message: 'Token inválido ou expirado' });
+        }
+
+        // Atualiza a senha do usuário
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password: hashedPassword })
+            .eq('email', email);
+
+        if (updateError) {
+            throw updateError;
+        }
+
+        // Remove o token após o uso
+        await supabase
+            .from('password_resets')
+            .delete()
+            .eq('email', email)
+            .eq('token', token);
+
+        res.status(200).json({ message: 'Senha redefinida com sucesso' });
+    } catch (err) {
+        console.error('Erro ao redefinir senha:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
