@@ -57,13 +57,13 @@ router.post('/login', async (req, res) => {
 
         if (error && error.code === 'PGRST116') {
             // Se o erro for "PGRST116" significa que não encontrou o usuário
-            return res.status(400).json({ message: `Senha incorreta para ${email}` });
+            return res.status(400).json({ message: `Senha incorreta para ${email} ou email não cadastrado` });
         } else if (error) {
             throw error;
         }
 
         if (!user) {
-            return res.status(400).json({ message: `Senha incorreta para ${email}` });
+            return res.status(400).json({ message: `Senha incorreta para ${email} ou email não cadastrado` });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
