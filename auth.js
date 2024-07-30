@@ -134,8 +134,7 @@ router.post('/forgot', async (req, res) => {
     }
 });
 
-//Endpoint para resetar a senha
-// auth.js
+// Endpoint para resetar a senha
 router.post('/reset', async (req, res) => {
     const { email, token, newPassword } = req.body;
 
@@ -168,7 +167,8 @@ router.post('/reset', async (req, res) => {
         }
 
         // Verificar se o token expirou
-        if (new Date() > new Date(resetRequest.expires_at)) {
+        const expiresAt = new Date(resetRequest.expires_at);
+        if (new Date() > expiresAt) {
             return res.status(400).json({ message: 'Token expirado' });
         }
 
@@ -196,6 +196,7 @@ router.post('/reset', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 console.log('Dados retornados da consulta de redefinição de senha:', resetRequest);
 console.log('Erro na consulta de redefinição de senha:', resetError);
