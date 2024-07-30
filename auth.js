@@ -138,10 +138,16 @@ router.post('/forgot', async (req, res) => {
 router.post('/reset', async (req, res) => {
     const { email, token, newPassword } = req.body;
 
+    console.log('Requisição recebida para redefinir senha');
+    console.log('Email:', email);
+    console.log('Token:', token);
+
     try {
-        console.log('Requisição recebida para redefinir senha');
-        console.log('Email:', email);
-        console.log('Token:', token);
+        // Verificar se o email e o token foram recebidos corretamente
+        if (!email || !token || !newPassword) {
+            console.log('Dados incompletos na requisição');
+            return res.status(400).json({ message: 'Dados incompletos na requisição' });
+        }
 
         // Consulta ao banco de dados para encontrar o registro de redefinição de senha mais recente
         const { data: resetRequests, error: resetError } = await supabase
@@ -149,23 +155,25 @@ router.post('/reset', async (req, res) => {
             .select('*')
             .eq('email', email)
             .order('created_at', { ascending: false })  // Ordena para obter o mais recente
-            .limit(1)
-            .single();
+            .limit(1);
 
         if (resetError) {
             console.error('Erro na consulta de redefinição de senha:', resetError);
             return res.status(500).json({ message: 'Erro ao consultar o banco de dados' });
         }
 
-        if (!resetRequests) {
+        if (resetRequests.length === 0) {
             console.log('Usuário não encontrado ou token inválido');
             return res.status(400).json({ message: 'Usuário não encontrado ou token inválido' });
         }
 
-        console.log('Dados retornados da consulta de redefinição de senha:', resetRequests);
+        // Pega o registro mais recente
+        const resetRequest = resetRequests[0];
+
+        console.log('Dados retornados da consulta de redefinição de senha:', resetRequest);
 
         // Verifica se o token é válido
-        if (resetRequests.token !== token) {
+        if (resetRequest.token !== token) {
             console.log('Token inválido');
             return res.status(400).json({ message: 'Token inválido' });
         }
