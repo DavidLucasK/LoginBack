@@ -135,6 +135,7 @@ router.post('/forgot', async (req, res) => {
 });
 
 //Endpoint para resetar a senha
+// auth.js
 router.post('/reset', async (req, res) => {
     const { email, token, newPassword } = req.body;
 
@@ -149,8 +150,8 @@ router.post('/reset', async (req, res) => {
     }
 
     try {
-        // Verificar se o email e token são válidos e não expirados
-        const { data: resetRequests, error: resetError } = await supabase
+        // Verificar o token
+        const { data: resetRequest, error: resetError } = await supabase
             .from('password_resets')
             .select('*')
             .eq('email', email)
@@ -159,12 +160,14 @@ router.post('/reset', async (req, res) => {
             .limit(1)
             .single();
 
+        // Verifica se houve erro na consulta ou se não encontrou o registro
         if (resetError || !resetRequest) {
             console.log('Dados retornados da consulta de redefinição de senha:', resetRequest);
             console.log('Erro na consulta de redefinição de senha:', resetError);
             return res.status(400).json({ message: 'Token inválido ou expirado' });
         }
 
+        // Verificar se o token expirou
         if (new Date() > new Date(resetRequest.expires_at)) {
             return res.status(400).json({ message: 'Token expirado' });
         }
@@ -180,7 +183,7 @@ router.post('/reset', async (req, res) => {
             throw updateError;
         }
 
-        // Remover o token usado
+        // Remover o token após a redefinição da senha
         await supabase
             .from('password_resets')
             .delete()
@@ -193,5 +196,12 @@ router.post('/reset', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
+console.log('Dados retornados da consulta de redefinição de senha:', resetRequest);
+console.log('Erro na consulta de redefinição de senha:', resetError);
+
+// Após a verificação de token expirado
+console.log('Data atual:', new Date());
+console.log('Data de expiração do token:', new Date(resetRequest.expires_at));
 
 module.exports = router;
