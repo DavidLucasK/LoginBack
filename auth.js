@@ -134,22 +134,31 @@ router.post('/forgot', async (req, res) => {
     }
 });
 
-// Endpoint para redefinir a senha
+//Endpoint para resetar a senha
 router.post('/reset', async (req, res) => {
     const { email, token, newPassword } = req.body;
 
     try {
-        const { data: resetRequest, error } = await supabase
+        // Obtém o último token de redefinição de senha para o e-mail
+        const { data: resetRequests, error: resetError } = await supabase
             .from('password_resets')
             .select('*')
             .eq('email', email)
-            .eq('token', token)
+            .order('created_at', { ascending: false })  // Ordena para obter o mais recente
+            .limit(1)
             .single();
 
-        if (error || !resetRequest) {
-            return res.status(400).json({ message: 'Token inválido ou expirado' });
+        if (resetError || !resetRequests) {
+            return res.status(400).json({ message: 'Usuário não encontrado ou token inválido' });
         }
 
+        // Verifica se o token é o mais recente
+        const resetRequest = resetRequests;
+        if (resetRequest.token !== token) {
+            return res.status(400).json({ message: 'Token inválido' });
+        }
+
+        // Atualiza a senha do usuário
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         const { error: updateError } = await supabase
             .from('users')
@@ -160,6 +169,7 @@ router.post('/reset', async (req, res) => {
             throw updateError;
         }
 
+        // Remove o token após o uso
         await supabase
             .from('password_resets')
             .delete()
@@ -172,5 +182,6 @@ router.post('/reset', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 module.exports = router;
