@@ -116,7 +116,7 @@ router.post('/forgot', async (req, res) => {
             from: process.env.EMAIL,
             to: email,
             subject: 'Redefinição de Senha',
-            text: `Você solicitou a redefinição de senha da sua conta. Clique no link para redefinir: ${process.env.FRONTEND_URL}/reset-password.html?token=${token}&email=${email}`,
+            text: `Você solicitou a redefinição de senha da sua conta. Clique no link para redefinir: ${process.env.FRONTEND_URL}/reset.html?token=${token}&email=${email}`,
         };
 
         transporter.sendMail(mailOptions, (err, info) => {
