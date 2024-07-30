@@ -141,40 +141,38 @@ router.post('/reset', async (req, res) => {
     console.log('Requisição recebida para redefinir senha');
     console.log('Email:', email);
     console.log('Token:', token);
+    console.log('Nova Senha:', newPassword);
 
     try {
-        // Verificar se o email e o token foram recebidos corretamente
-        if (!email || !token || !newPassword) {
-            console.log('Dados incompletos na requisição');
-            return res.status(400).json({ message: 'Dados incompletos na requisição' });
-        }
-
-        // Consulta ao banco de dados para encontrar o registro de redefinição de senha mais recente
+        // Verificar se o email e token são válidos e não expirados
         const { data: resetRequests, error: resetError } = await supabase
             .from('password_resets')
             .select('*')
             .eq('email', email)
-            .order('created_at', { ascending: false })  // Ordena para obter o mais recente
+            .eq('token', token)
+            .order('created_at', { ascending: false })
             .limit(1)
             .single();
 
-        console.log('Dados retornados da consulta de redefinição de senha:', resetRequests);
-        console.log('Erro na consulta de redefinição de senha:', resetError);
-
         if (resetError) {
-            return res.status(500).json({ message: 'Erro na consulta de redefinição de senha' });
+            console.error('Erro na consulta de redefinição de senha:', resetError);
+            return res.status(400).json({ message: 'Usuário não encontrado ou token inválido' });
         }
 
         if (!resetRequests) {
             return res.status(400).json({ message: 'Usuário não encontrado ou token inválido' });
         }
 
-        // Verifica se o token recebido coincide com o token mais recente
-        if (resetRequests.token !== token) {
-            return res.status(400).json({ message: 'Token inválido' });
+        // Verificar se o token está expirado (considerando 1 hora como exemplo)
+        const tokenCreationTime = new Date(resetRequests.created_at);
+        const currentTime = new Date();
+        const expirationTime = 1 * 60 * 60 * 1000; // 1 hora em milissegundos
+
+        if (currentTime - tokenCreationTime > expirationTime) {
+            return res.status(400).json({ message: 'Token expirado' });
         }
 
-        // Atualiza a senha do usuário
+        // Atualizar a senha
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         const { error: updateError } = await supabase
             .from('users')
@@ -182,21 +180,15 @@ router.post('/reset', async (req, res) => {
             .eq('email', email);
 
         if (updateError) {
-            console.log('Erro ao atualizar a senha:', updateError);
-            return res.status(500).json({ message: 'Erro ao atualizar a senha' });
+            throw updateError;
         }
 
-        // Remove o token após o uso
-        const { error: deleteError } = await supabase
+        // Remover o token usado
+        await supabase
             .from('password_resets')
             .delete()
             .eq('email', email)
             .eq('token', token);
-
-        if (deleteError) {
-            console.log('Erro ao remover o token:', deleteError);
-            return res.status(500).json({ message: 'Erro ao remover o token' });
-        }
 
         res.status(200).json({ message: 'Senha redefinida com sucesso' });
     } catch (err) {
