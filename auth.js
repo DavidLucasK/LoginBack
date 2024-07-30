@@ -84,7 +84,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Endpoint para solicitar redefinição de senha
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot', async (req, res) => {
     const { email } = req.body;
 
     try {
@@ -140,7 +140,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // Endpoint para redefinir a senha
-router.post('/reset-password', async (req, res) => {
+router.post('/reset', async (req, res) => {
     const { email, token, newPassword } = req.body;
 
     try {
