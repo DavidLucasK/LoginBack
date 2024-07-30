@@ -197,12 +197,4 @@ router.post('/reset', async (req, res) => {
     }
 });
 
-
-console.log('Dados retornados da consulta de redefinição de senha:', resetRequest);
-console.log('Erro na consulta de redefinição de senha:', resetError);
-
-// Após a verificação de token expirado
-console.log('Data atual:', new Date());
-console.log('Data de expiração do token:', new Date(resetRequest.expires_at));
-
 module.exports = router;
