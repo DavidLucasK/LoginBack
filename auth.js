@@ -92,7 +92,6 @@ router.post('/login', async (req, res) => {
 });
 
 // Endpoint para solicitar redefinição de senha
-// Endpoint para solicitar redefinição de senha
 router.post('/forgot', async (req, res) => {
     const { email } = req.body;
 
@@ -109,7 +108,7 @@ router.post('/forgot', async (req, res) => {
 
         const token = crypto.randomBytes(32).toString('hex');
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + 60 * 60 * 1000); // Expira em 1 hora
+        const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // Expira em 15 minutos
 
         // Inserir o token e a data de expiração diretamente
         const { error: insertError } = await supabase
