@@ -108,7 +108,7 @@ router.post('/forgot-password', async (req, res) => {
 
         // Configura o transporte de e-mail
         const transporter = nodemailer.createTransport({
-            service: 'Gmail',
+            service: 'gmail',
             auth: {
                 user: process.env.EMAIL,
                 pass: process.env.EMAIL_PASSWORD,
@@ -126,8 +126,10 @@ router.post('/forgot-password', async (req, res) => {
         // Envia o e-mail
         transporter.sendMail(mailOptions, (err, info) => {
             if (err) {
+                console.error('Erro ao enviar e-mail:', err);
                 return res.status(500).json({ message: 'Erro ao enviar e-mail' });
             } else {
+                console.log('E-mail enviado:', info.response);
                 return res.status(200).json({ message: 'E-mail enviado com sucesso' });
             }
         });
