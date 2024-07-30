@@ -155,26 +155,22 @@ router.post('/reset', async (req, res) => {
             .select('*')
             .eq('email', email)
             .order('created_at', { ascending: false })  // Ordena para obter o mais recente
-            .limit(1);
+            .limit(1)
+            .single();
+
+        console.log('Dados retornados da consulta de redefinição de senha:', resetRequests);
+        console.log('Erro na consulta de redefinição de senha:', resetError);
 
         if (resetError) {
-            console.error('Erro na consulta de redefinição de senha:', resetError);
-            return res.status(500).json({ message: 'Erro ao consultar o banco de dados' });
+            return res.status(500).json({ message: 'Erro na consulta de redefinição de senha' });
         }
 
-        if (resetRequests.length === 0) {
-            console.log('Usuário não encontrado ou token inválido');
+        if (!resetRequests) {
             return res.status(400).json({ message: 'Usuário não encontrado ou token inválido' });
         }
 
-        // Pega o registro mais recente
-        const resetRequest = resetRequests[0];
-
-        console.log('Dados retornados da consulta de redefinição de senha:', resetRequest);
-
-        // Verifica se o token é válido
-        if (resetRequest.token !== token) {
-            console.log('Token inválido');
+        // Verifica se o token recebido coincide com o token mais recente
+        if (resetRequests.token !== token) {
             return res.status(400).json({ message: 'Token inválido' });
         }
 
@@ -186,7 +182,7 @@ router.post('/reset', async (req, res) => {
             .eq('email', email);
 
         if (updateError) {
-            console.error('Erro ao atualizar a senha do usuário:', updateError);
+            console.log('Erro ao atualizar a senha:', updateError);
             return res.status(500).json({ message: 'Erro ao atualizar a senha' });
         }
 
@@ -198,8 +194,8 @@ router.post('/reset', async (req, res) => {
             .eq('token', token);
 
         if (deleteError) {
-            console.error('Erro ao remover o token:', deleteError);
-            return res.status(500).json({ message: 'Erro ao remover o token de redefinição' });
+            console.log('Erro ao remover o token:', deleteError);
+            return res.status(500).json({ message: 'Erro ao remover o token' });
         }
 
         res.status(200).json({ message: 'Senha redefinida com sucesso' });
@@ -208,15 +204,5 @@ router.post('/reset', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
-
-const { data, error } = await supabase
-    .from('password_resets')
-    .select('*')
-    .limit(1)
-    .single();
-
-console.log('Dados:', data);
-console.error('Erro:', error);
-
 
 module.exports = router;
