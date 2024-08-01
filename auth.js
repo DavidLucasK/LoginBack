@@ -250,7 +250,7 @@ router.post('/update-points', async (req, res) => {
         const { data: userPoints, error: fetchError } = await supabase
             .from('user_points')
             .select('points')
-            .eq('username', 'amor')
+            .eq('username', username)
             .single();
 
         if (fetchError || !userPoints) {
@@ -264,7 +264,7 @@ router.post('/update-points', async (req, res) => {
         const { error: updateError } = await supabase
             .from('user_points')
             .update({ points: newPoints })
-            .eq('username', 'amor');
+            .eq('username', username);
 
         if (updateError) {
             throw updateError;
