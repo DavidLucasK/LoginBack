@@ -277,5 +277,38 @@ router.post('/update-points', async (req, res) => {
     }
 });
 
+// Endpoint para buscar perguntas e respostas
+router.get('/questions', async (req, res) => {
+    try {
+        // Buscar perguntas
+        const { data: questions, error: questionsError } = await supabase
+            .from('perguntas')
+            .select('*');
+
+        if (questionsError) {
+            throw questionsError;
+        }
+
+        // Buscar respostas para as perguntas
+        const { data: answers, error: answersError } = await supabase
+            .from('respostas')
+            .select('*');
+
+        if (answersError) {
+            throw answersError;
+        }
+
+        // Organizar as respostas por pergunta
+        const questionsWithAnswers = questions.map(question => ({
+            ...question,
+            answers: answers.filter(answer => answer.pergunta_id === question.id)
+        }));
+
+        res.status(200).json(questionsWithAnswers);
+    } catch (err) {
+        console.error('Erro ao buscar perguntas e respostas:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
 
 module.exports = router;
