@@ -6,7 +6,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors({
-    origin: 'https://logindl.vercel.app', // Substitua pelo domínio do seu frontend
+    origin: ['https://logindl.vercel.app', 'https://teamoma.vercel.app']
 }));
 app.use(express.json());
 
