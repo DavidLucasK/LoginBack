@@ -213,4 +213,29 @@ router.post('/reset', async (req, res) => {
     }
 });
 
+// Endpoint para buscar a quantidade de pontos de um usuário
+router.get('/points', async (req, res) => {
+    try {
+        const { data: userPoints, error } = await supabase
+            .from('user_points')
+            .select('points')
+            .eq('username', 'amor')
+            .single();  // Obtém um único registro
+
+        if (error) {
+            throw error;
+        }
+
+        if (!userPoints) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        res.status(200).json({ points: userPoints.points });
+    } catch (err) {
+        console.error('Erro ao buscar pontos:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+
 module.exports = router;
