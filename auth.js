@@ -237,5 +237,45 @@ router.get('/points', async (req, res) => {
     }
 });
 
+// Endpoint para atualizar pontos do usuário após um minigame
+router.post('/update-points', async (req, res) => {
+    const { username, pointsEarned } = req.body;
+
+    if (!username || pointsEarned === undefined) {
+        return res.status(400).json({ message: 'Dados incompletos' });
+    }
+
+    try {
+        // Obter os pontos atuais do usuário
+        const { data: userPoints, error: fetchError } = await supabase
+            .from('user_points')
+            .select('points')
+            .eq('username', 'amor')
+            .single();
+
+        if (fetchError || !userPoints) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        // Calcular novos pontos
+        const newPoints = userPoints.points + pointsEarned;
+
+        // Atualizar pontos do usuário
+        const { error: updateError } = await supabase
+            .from('user_points')
+            .update({ points: newPoints })
+            .eq('username', 'amor');
+
+        if (updateError) {
+            throw updateError;
+        }
+
+        res.status(200).json({ message: 'Pontos atualizados com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao atualizar pontos:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 
 module.exports = router;
