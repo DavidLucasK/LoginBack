@@ -24,6 +24,26 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+//Grava o resgate feito pelo usuário na tabela resgates
+router.post('/record-redemption', async (req, res) => {
+    const { userId, rewardId } = req.body;
+
+    try {
+        const { error } = await supabase
+            .from('resgates')
+            .insert([{ user_id: userId, reward_id: rewardId, created_at: new Date() }]);
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(200).json({ message: 'Resgate registrado com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao registrar resgate:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 // Endpoint para upload de fotos
 router.post('/upload', upload.single('photo'), async (req, res) => {
     const file = req.file;
