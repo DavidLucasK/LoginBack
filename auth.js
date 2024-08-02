@@ -5,7 +5,6 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
 
@@ -34,7 +33,10 @@ router.post('/upload', upload.single('photo'), async (req, res) => {
     }
 
     try {
-        const fileName = `${uuidv4()}_${file.originalname}`;
+        // Gerar um nome de arquivo único com base na data e hora
+        const timestamp = Date.now();
+        const fileName = `${timestamp}_${file.originalname}`;
+
         const { data, error } = await supabase.storage
             .from('fotos')
             .upload(fileName, file.buffer, {
@@ -53,8 +55,6 @@ router.post('/upload', upload.single('photo'), async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
-
-
 
 // Endpoint para registro
 router.post('/register', async (req, res) => {
