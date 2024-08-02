@@ -4,8 +4,13 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -19,6 +24,37 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASSWORD,
     },
 });
+
+// Endpoint para upload de fotos
+router.post('/upload', upload.single('photo'), async (req, res) => {
+    const file = req.file;
+
+    if (!file) {
+        return res.status(400).json({ message: 'Nenhum arquivo enviado' });
+    }
+
+    try {
+        const fileName = `${uuidv4()}_${file.originalname}`;
+        const { data, error } = await supabase.storage
+            .from('fotos')
+            .upload(fileName, file.buffer, {
+                contentType: file.mimetype,
+                upsert: true
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        const fileUrl = `${supabaseUrl}/storage/v1/object/public/fotos/${fileName}`;
+        res.status(200).json({ message: 'Foto enviada com sucesso!', fileUrl });
+    } catch (err) {
+        console.error('Erro ao fazer upload da foto:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+
 
 // Endpoint para registro
 router.post('/register', async (req, res) => {
