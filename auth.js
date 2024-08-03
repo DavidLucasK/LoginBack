@@ -25,33 +25,17 @@ const transporter = nodemailer.createTransport({
 });
 
 //Grava o resgate feito pelo usuário na tabela resgates
-router.post('/record-redemption', async (req, res) => {
+router.post('/insert-redemption', async (req, res) => {
     const { userId, rewardId, pontos } = req.body;
 
     try {
-        // Obter os pontos do usuário
-        const { data: userData, error: userError } = await supabase
-            .from('user_points')
-            .select('points')
-            .eq('user_id', userId)
-            .single();
-
-        if (userError) {
-            throw userError;
-        }
-
-        // Verificar se o usuário tem pontos suficientes
-        if (userData.points < pontos) {
-            return res.status(400).json({ message: 'Você não tem pontos suficientes' });
-        }
-
         // Inserir o resgate na tabela resgates
-        const { error: insertError } = await supabase
+        const { error } = await supabase
             .from('resgates')
             .insert([{ user_id: userId, reward_id: rewardId, created_at: new Date(), pontos_qtd: pontos }]);
 
-        if (insertError) {
-            throw insertError;
+        if (error) {
+            throw error;
         }
 
         res.status(200).json({ message: 'Resgate registrado com sucesso!' });
