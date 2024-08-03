@@ -26,12 +26,12 @@ const transporter = nodemailer.createTransport({
 
 //Grava o resgate feito pelo usuário na tabela resgates
 router.post('/record-redemption', async (req, res) => {
-    const { userId, rewardId } = req.body;
+    const { userId, rewardId, pontos } = req.body;
 
     try {
         const { error } = await supabase
             .from('resgates')
-            .insert([{ user_id: userId, reward_id: rewardId, created_at: new Date() }]);
+            .insert([{ user_id: userId, reward_id: rewardId, created_at: new Date(), pontos }]);
 
         if (error) {
             throw error;
