@@ -29,10 +29,10 @@ router.post('/record-redemption', async (req, res) => {
     const { userId, rewardId, pontos } = req.body;
 
     try {
-        // Iniciar uma transação para garantir a consistência
+        // Obter os pontos do usuário
         const { data: userData, error: userError } = await supabase
             .from('user_points')
-            .select('pontos')
+            .select('points')
             .eq('user_id', userId)
             .single();
 
@@ -41,18 +41,8 @@ router.post('/record-redemption', async (req, res) => {
         }
 
         // Verificar se o usuário tem pontos suficientes
-        if (userData.pontos < pontos) {
+        if (userData.points < pontos) {
             return res.status(400).json({ message: 'Você não tem pontos suficientes' });
-        }
-
-        // Deduzir os pontos do usuário
-        const { error: updateError } = await supabase
-            .from('user_points')
-            .update({ pontos: userData.pontos - pontos })
-            .eq('user_id', userId);
-
-        if (updateError) {
-            throw updateError;
         }
 
         // Inserir o resgate na tabela resgates
@@ -64,12 +54,23 @@ router.post('/record-redemption', async (req, res) => {
             throw insertError;
         }
 
+        // Deduzir os pontos do usuário após o insert bem-sucedido
+        const { error: updateError } = await supabase
+            .from('user_points')
+            .update({ points: userData.points - pontos })
+            .eq('user_id', userId);
+
+        if (updateError) {
+            throw updateError;
+        }
+
         res.status(200).json({ message: 'Resgate registrado com sucesso!' });
     } catch (err) {
         console.error('Erro ao registrar resgate:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 
 // Endpoint para upload de fotos
