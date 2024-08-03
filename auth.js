@@ -54,16 +54,6 @@ router.post('/record-redemption', async (req, res) => {
             throw insertError;
         }
 
-        // Deduzir os pontos do usuário após o insert bem-sucedido
-        const { error: updateError } = await supabase
-            .from('user_points')
-            .update({ points: userData.points - pontos })
-            .eq('user_id', userId);
-
-        if (updateError) {
-            throw updateError;
-        }
-
         res.status(200).json({ message: 'Resgate registrado com sucesso!' });
     } catch (err) {
         console.error('Erro ao registrar resgate:', err);
