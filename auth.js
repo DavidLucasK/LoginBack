@@ -337,14 +337,12 @@ router.post('/update-points', async (req, res) => {
 });
 
 // Endpoint para buscar perguntas e respostas aleatórias
+// Endpoint para buscar perguntas e respostas aleatórias
 router.get('/questions', async (req, res) => {
     try {
-        // Buscar 5 perguntas aleatórias
+        // Buscar 5 perguntas aleatórias usando uma consulta SQL direta
         const { data: questions, error: questionsError } = await supabase
-            .from('perguntas')
-            .select('*')
-            .order('random') // Ordena aleatoriamente
-            .limit(5); // Limita a 5 perguntas
+            .rpc('get_random_questions', { limit: 5 });
 
         if (questionsError) {
             throw questionsError;
@@ -377,6 +375,7 @@ router.get('/questions', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 
 module.exports = router;
