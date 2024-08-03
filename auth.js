@@ -314,7 +314,7 @@ router.post('/update-points', async (req, res) => {
         }
 
         // Calcular novos pontos
-        const newPoints = userPoints.points + pointsEarned;
+        const newPoints = userPoints.points + (pointsEarned);
 
         // Atualizar pontos do usuário
         const { error: updateError } = await supabase
