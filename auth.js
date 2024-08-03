@@ -355,7 +355,7 @@ router.get('/questions', async (req, res) => {
         const questionIds = questions.map(question => question.id);
         const { data: answers, error: answersError } = await supabase
             .from('respostas')
-            .select('*')
+            .select('id, pergunta_id, resposta, is_correta')  // Qualificar colunas explicitamente
             .in('pergunta_id', questionIds); // Filtra as respostas pelas perguntas selecionadas
 
         if (answersError) {
