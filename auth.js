@@ -422,7 +422,7 @@ router.post('/update-quiz-status', async (req, res) => {
 router.get('/items', async (req, res) => {
     try {
         const { data: items, error } = await supabase
-            .from('loja')
+            .from('store')
             .select('*');
 
         if (error) {
