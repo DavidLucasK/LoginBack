@@ -341,7 +341,7 @@ router.get('/questions', async (req, res) => {
     try {
         // Buscar 5 perguntas aleatórias usando a função RPC
         const { data: questions, error: questionsError } = await supabase
-            .rpc('get_random_questions', { p_limit: 5 });
+            .rpc('get_random_questions', { p_limit: 7 });
 
         if (questionsError) {
             throw questionsError;
