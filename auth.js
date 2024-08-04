@@ -375,17 +375,37 @@ router.get('/questions', async (req, res) => {
     }
 });
 
+// Endpoint para verificar o status do quiz
+router.get('/quiz-status', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('status_quiz')
+            .select('is_completed')
+            .eq('id', 1)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(200).json({ is_completed: data.is_completed });
+    } catch (err) {
+        console.error('Erro ao verificar status do quiz:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+
 // Endpoint para atualizar o status do quiz
 router.post('/update-quiz-status', async (req, res) => {
     try {
-        // Atualizar o status do quiz para o id = 1
         const { error } = await supabase
             .from('status_quiz')
             .update({
-                data_ultimo_quiz: new Date(), // Define a data atual
-                is_completed: true // Define como concluído
+                data_ultimo_quiz: new Date(),
+                is_completed: true
             })
-            .eq('id', 1); // Condição para o id igual a 1
+            .eq('id', 1);
 
         if (error) {
             throw error;
