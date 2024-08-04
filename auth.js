@@ -418,5 +418,22 @@ router.post('/update-quiz-status', async (req, res) => {
     }
 });
 
+// Endpoint para listar todos os itens da loja
+router.get('/items', async (req, res) => {
+    try {
+        const { data: items, error } = await supabase
+            .from('loja')
+            .select('*');
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(200).json(items);
+    } catch (err) {
+        console.error('Erro ao listar itens:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
 
 module.exports = router;
