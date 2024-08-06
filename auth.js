@@ -45,7 +45,25 @@ router.post('/insert-redemption', async (req, res) => {
     }
 });
 
+router.post('/insert-redemption-test', async (req, res) => {
+    const { rewardId, pointsRequired } = req.body;
 
+    try {
+        // Inserir o resgate na tabela resgates
+        const { error } = await supabase
+            .from('resgates')
+            .insert([{ user_id: 999, reward_id: rewardId, created_at: new Date(), pontos_qtd: pointsRequired }]);
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(200).json({ message: 'Resgate registrado com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao registrar resgate:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
 
 // Endpoint para upload de fotos
 router.post('/upload', upload.single('photo'), async (req, res) => {
@@ -296,6 +314,29 @@ router.get('/points', async (req, res) => {
     }
 });
 
+router.get('/points-test', async (req, res) => {
+    try {
+        const { data: userPoints, error } = await supabase
+            .from('user_points_teste')
+            .select('points')
+            .eq('username', 'teste')
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        if (!userPoints) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        res.status(200).json({ points: userPoints.points });
+    } catch (err) {
+        console.error('Erro ao buscar pontos:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 // Endpoint para atualizar pontos do usuário após um minigame
 router.post('/update-points', async (req, res) => {
     const { username, pointsEarned } = req.body;
@@ -322,6 +363,45 @@ router.post('/update-points', async (req, res) => {
         // Atualizar pontos do usuário
         const { error: updateError } = await supabase
             .from('user_points')
+            .update({ points: newPoints })
+            .eq('username', username);
+
+        if (updateError) {
+            throw updateError;
+        }
+
+        res.status(200).json({ message: 'Pontos atualizados com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao atualizar pontos:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+router.post('/update-points-test', async (req, res) => {
+    const { username, pointsEarned } = req.body;
+
+    if (!username || pointsEarned === undefined) {
+        return res.status(400).json({ message: 'Dados incompletos' });
+    }
+
+    try {
+        // Obter os pontos atuais do usuário
+        const { data: userPoints, error: fetchError } = await supabase
+            .from('user_points_teste')
+            .select('points')
+            .eq('username', username)
+            .single();
+
+        if (fetchError || !userPoints) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        // Calcular novos pontos
+        const newPoints = userPoints.points + (pointsEarned);
+
+        // Atualizar pontos do usuário
+        const { error: updateError } = await supabase
+            .from('user_points_teste')
             .update({ points: newPoints })
             .eq('username', username);
 
@@ -395,12 +475,51 @@ router.get('/quiz-status', async (req, res) => {
     }
 });
 
+router.get('/quiz-status-test', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('status_quiz-teste')
+            .select('is_completed')
+            .eq('id', 1)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(200).json({ is_completed: data.is_completed });
+    } catch (err) {
+        console.error('Erro ao verificar status do quiz:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
 
 // Endpoint para atualizar o status do quiz
 router.post('/update-quiz-status', async (req, res) => {
     try {
         const { error } = await supabase
             .from('status_quiz')
+            .update({
+                data_ultimo_quiz: new Date(),
+                is_completed: true
+            })
+            .eq('id', 1);
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(200).json({ message: 'Status do quiz atualizado com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao atualizar status do quiz:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+router.post('/update-quiz-status-test', async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('status_quiz-teste')
             .update({
                 data_ultimo_quiz: new Date(),
                 is_completed: true
