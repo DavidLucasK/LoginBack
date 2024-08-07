@@ -37,6 +37,29 @@ router.post('/insert-redemption', async (req, res) => {
         if (error) {
             throw error;
         }
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: "davidlucasfr70@gmail.com",
+            subject: 'Resgate na Loja!!',
+            text: `A Marcela resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
+            html: `
+                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+                    <h2 style="color: #333;">Resgate na Loja!!</h2>
+                    <p style="color: #666;">Clique abaixo para ver o resgate na loja da Supabase</p>
+                    <a href="https://supabase.com/dashboard/project/ojxyfmbpzjypidukzlqf/editor/30141" style="background-color: #7b30d0; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Redefinir Senha</a>
+                </div>
+                `
+        };
+
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.error('Erro ao enviar e-mail:', err);
+                return res.status(500).json({ message: 'Erro ao enviar e-mail!' });
+            } else {
+                console.log('E-mail enviado:', info.response);
+                return res.status(200).json({ message: 'E-mail enviado com sucesso!' });
+            }
+        });
 
         res.status(200).json({ message: 'Resgate registrado com sucesso!' });
     } catch (err) {
