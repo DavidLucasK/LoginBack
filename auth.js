@@ -29,10 +29,23 @@ router.post('/insert-redemption', async (req, res) => {
     const { userId, rewardId, pointsRequired } = req.body;
 
     try {
+        //Buscando o nome do item
+        const { data: storeData, error: storeError } = await supabase
+            .from('store')
+            .select('name')
+            .eq('id', rewardId)
+            .single();
+
+        if (storeError) {
+            throw storeError;
+        }
+
+        const itemStore = storeData.name;
+
         // Inserir o resgate na tabela resgates
         const { error } = await supabase
             .from('resgates')
-            .insert([{ user_id: userId, reward_id: rewardId, created_at: new Date(), pontos_qtd: pointsRequired }]);
+            .insert([{ user_id: userId, reward_id: rewardId, created_at: new Date(), pontos_qtd: pointsRequired, item_store: itemStore }]);
 
         if (error) {
             throw error;
