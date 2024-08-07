@@ -46,7 +46,7 @@ router.post('/insert-redemption', async (req, res) => {
                 <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
                     <h2 style="color: #333;">Resgate na Loja!!</h2>
                     <p style="color: #666;">Clique abaixo para ver o resgate na loja da Supabase</p>
-                    <a href="https://supabase.com/dashboard/project/ojxyfmbpzjypidukzlqf/editor/30141" style="background-color: #7b30d0; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Redefinir Senha</a>
+                    <a href="https://supabase.com/dashboard/project/ojxyfmbpzjypidukzlqf/editor/30141" style="background-color: #bd11a8; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Resgate da Ma</a>
                 </div>
                 `
         };
