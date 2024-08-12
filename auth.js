@@ -399,7 +399,7 @@ router.post('/update-points', async (req, res) => {
         // Atualizar pontos do usuário
         const { error: updateError } = await supabase
             .from('user_points')
-            .update({ points: newPoints })
+            .update({ points: newPoints, last_updated: new Date() })
             .eq('username', username);
 
         if (updateError) {
