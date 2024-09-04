@@ -652,11 +652,16 @@ router.post('/upload_post', async (req, res) => {
     }
 
     try {
+
+        const now = new Date();
+        now.setHours(now.getHours() - 3); // Subtrai 3 horas
+        const adjustedDate = now.toISOString();
+
         const { data, error } = await supabase
             .from('posts')
             .insert([
                 {
-                    data: new Date().toISOString(),
+                    data: adjustedDate,
                     username: 'Mazinha02',
                     nome_foto: nome_foto,
                     desc_foto: desc_foto,
