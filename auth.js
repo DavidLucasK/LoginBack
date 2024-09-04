@@ -610,4 +610,34 @@ router.get('/posts', async (req, res) => {
     }
 });
 
+app.post('/upload_post', async (req, res) => {
+    const { nome_foto, desc_foto } = req.body;
+
+    if (!nome_foto || !desc_foto) {
+        return res.status(400).json({ error: 'Nome da foto e descrição são necessários.' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('posts')
+            .insert([
+                {
+                    data: new Date().toISOString(),
+                    username: 'Mazinha02',
+                    nome_foto: nome_foto,
+                    desc_foto: desc_foto,
+                    is_liked: false
+                }
+            ]);
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(201).json({ message: 'Post criado com sucesso!', data });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
