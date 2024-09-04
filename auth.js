@@ -645,9 +645,9 @@ router.get('/posts', async (req, res) => {
 });
 
 router.post('/upload_post', async (req, res) => {
-    const { nome_foto, desc_foto } = req.body;
+    const { nome_foto, desc_foto, username } = req.body;
 
-    if (!nome_foto || !desc_foto) {
+    if (!nome_foto || !desc_foto || username) {
         return res.status(400).json({ error: 'Nome da foto e descrição são necessários.' });
     }
 
@@ -662,7 +662,7 @@ router.post('/upload_post', async (req, res) => {
             .insert([
                 {
                     data: adjustedDate,
-                    username: 'Mazinha02',
+                    username: username,
                     nome_foto: nome_foto,
                     desc_foto: desc_foto,
                     is_liked: false
