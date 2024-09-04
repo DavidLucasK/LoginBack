@@ -610,7 +610,7 @@ router.get('/posts', async (req, res) => {
     }
 });
 
-app.post('/upload_post', async (req, res) => {
+router.post('/upload_post', async (req, res) => {
     const { nome_foto, desc_foto } = req.body;
 
     if (!nome_foto || !desc_foto) {
