@@ -59,7 +59,7 @@ router.post('/insert-redemption', async (req, res) => {
                 <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
                     <h2 style="color: #333;">Resgate na Loja!!</h2>
                     <p style="color: #666;">Clique abaixo para ver o resgate na loja da Supabase</p>
-                    <a href="https://supabase.com/dashboard/project/ojxyfmbpzjypidukzlqf/editor/30141" style="background-color: #bd11a8; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Resgate da Ma</a>
+                    <a href="https://supabase.com/dashboard/project/ojxyfmbpzjypidukzlqf/editor/30141" style="background-color: #bd11a8; color: #F5F3F4; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Resgate da Ma</a>
                 </div>
                 `
         };
@@ -242,7 +242,7 @@ router.post('/forgot', async (req, res) => {
                     <h2 style="color: #333;">Redefinição de Senha</h2>
                     <p style="color: #666;">Você solicitou a redefinição de senha da sua conta.</p>
                     <p style="color: #666;">Clique no botão abaixo para redefinir sua senha:</p>
-                    <a href="${process.env.FRONTEND_URL}/reset.html?token=${token}&email=${email}" style="background-color: #7b30d0; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Redefinir Senha</a>
+                    <a href="${process.env.FRONTEND_URL}/reset.html?token=${token}&email=${email}" style="background-color: #7b30d0; color: #F5F3F4; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Redefinir Senha</a>
                     <p style="color: #999; margin-top: 20px;">Se você não solicitou esta alteração, por favor ignore este e-mail.</p>
                 </div>
                 `
@@ -587,6 +587,25 @@ router.get('/items', async (req, res) => {
         res.status(200).json(items);
     } catch (err) {
         console.error('Erro ao listar itens:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+router.get('/posts', async (req, res) => {
+    try {
+        // Buscar todos os dados da tabela 'posts'
+        const { data: posts, error } = await supabase
+            .from('posts')
+            .select('*');
+
+        if (error) {
+            throw error;
+        }
+
+        // Retornar os dados como JSON
+        res.status(200).json(posts);
+    } catch (err) {
+        console.error('Erro ao buscar posts:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
