@@ -647,8 +647,16 @@ router.get('/posts', async (req, res) => {
 router.post('/upload_post', async (req, res) => {
     const { nome_foto, desc_foto, username } = req.body;
 
-    if (!nome_foto || !desc_foto || username) {
-        return res.status(400).json({ error: 'Nome da foto e descrição são necessários.' });
+    if (!nome_foto) {
+        return res.status(400).json({ error: 'Nome da foto é necessário.' });
+    }
+
+    if (!desc_foto) {
+        return res.status(400).json({ error: 'Descrição é necessária.' });
+    }
+
+    if (!username) {
+        return res.status(400).json({ error: 'Username é necessário.' });
     }
 
     try {
