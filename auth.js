@@ -627,10 +627,15 @@ router.get('/items', async (req, res) => {
 
 router.get('/posts', async (req, res) => {
     try {
-        // Buscar todos os dados da tabela 'posts'
+        const limit = parseInt(req.query.limit) || 5; // Definindo o limite padrão como 5
+        const lastId = parseInt(req.query.lastId) || 0; // Definindo o ID do último post carregado (cursor)
+
+        // Buscar posts com paginação
         const { data: posts, error } = await supabase
             .from('posts')
-            .select('*');
+            .select('*')
+            .gt('id', lastId) // Filtra posts com ID maior que o último carregado
+            .limit(limit);    // Limita o número de posts a serem carregados
 
         if (error) {
             throw error;
@@ -643,6 +648,7 @@ router.get('/posts', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 router.post('/upload_post', async (req, res) => {
     const { nome_foto, desc_foto, username } = req.body;
