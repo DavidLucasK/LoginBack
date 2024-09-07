@@ -630,13 +630,18 @@ router.get('/posts', async (req, res) => {
         const limit = parseInt(req.query.limit) || 5; // Definindo o limite padrão como 5
         const lastId = parseInt(req.query.lastId); // Pega o ID do último post carregado (cursor)
 
-        // Verifica se o lastId é válido e utiliza o operador 'lt' para buscar posts com ID menor que o último carregado
-        const { data: posts, error } = await supabase
+        // Se lastId não for um número válido, não aplicamos o filtro 'lt'
+        let query = supabase
             .from('posts')
             .select('*')
             .order('id', { ascending: false }) // Ordena por ID em ordem decrescente
-            .lt('id', lastId || Infinity) // Filtra posts com ID menor que o último carregado ou começa do maior ID
             .limit(limit);    // Limita o número de posts a serem carregados
+
+        if (!isNaN(lastId)) {
+            query = query.lt('id', lastId); // Filtra posts com ID menor que o último carregado
+        }
+
+        const { data: posts, error } = await query;
 
         if (error) {
             throw error;
@@ -649,6 +654,7 @@ router.get('/posts', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 // router.get('/posts', async (req, res) => {
 //     try {
