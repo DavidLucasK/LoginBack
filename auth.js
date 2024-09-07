@@ -648,7 +648,24 @@ router.get('/posts', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+// router.get('/posts', async (req, res) => {
+//     try {
+//         // Buscar todos os dados da tabela 'posts'
+//         const { data: posts, error } = await supabase
+//             .from('posts')
+//             .select('*');
 
+//         if (error) {
+//             throw error;
+//         }
+
+//         // Retornar os dados como JSON
+//         res.status(200).json(posts);
+//     } catch (err) {
+//         console.error('Erro ao buscar posts:', err);
+//         res.status(500).json({ message: 'Erro no servidor' });
+//     }
+// });
 
 router.post('/upload_post', async (req, res) => {
     const { nome_foto, desc_foto, username } = req.body;
