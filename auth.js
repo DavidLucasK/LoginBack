@@ -639,7 +639,6 @@ router.get('/posts', async (req, res) => {
       const { data: posts, error } = await supabase
         .from('posts')
         .select('id, title, description, data') // Selecione apenas os campos necessários
-        .ilike('title', `%${search}%`) // Filtra posts pelo título, opcional
         .order(sortBy, { ascending: false }) // Ordena os resultados
         .range(offset, offset + limit - 1); // Paginação
   
