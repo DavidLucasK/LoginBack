@@ -627,7 +627,7 @@ router.get('/items', async (req, res) => {
 
 router.get('/posts', async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 20; // Definindo o limite padrão como 5
+        const limit = parseInt(req.query.limit) || 10; // Definindo o limite padrão como 5
         const lastId = parseInt(req.query.lastId); // Pega o ID do último post carregado (cursor)
 
         // Se lastId não for um número válido, não aplicamos o filtro 'lt'
