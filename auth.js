@@ -190,7 +190,7 @@ router.post('/upload_imagepic', upload.single('photo'), async (req, res) => {
             throw error;
         }
 
-        const fileUrl = `${supabaseUrl}/storage/v1/object/public/profile-pics/${fileName}`;
+        const fileUrl = `${supabaseUrl}/storage/v1/object/public/profile_pics/${fileName}`;
         res.status(200).json({ message: 'Foto enviada com sucesso!', fileUrl });
     } catch (err) {
         console.error('Erro ao fazer upload da foto:', err);
