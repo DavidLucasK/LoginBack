@@ -638,7 +638,7 @@ router.get('/posts', async (req, res) => {
       // Fazer a busca na tabela de 'posts' com paginação, filtros e ordenação
       const { data: posts, error } = await supabase
         .from('posts')
-        .select('id, title, description, data') // Selecione apenas os campos necessários
+        .select('*') // Selecione apenas os campos necessários
         .order(sortBy, { ascending: false }) // Ordena os resultados
         .range(offset, offset + limit - 1); // Paginação
   
