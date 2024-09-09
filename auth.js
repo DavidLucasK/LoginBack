@@ -729,15 +729,15 @@ router.post('/update-profile', async (req, res) => {
     const { userId, name, email, phone, profileImage } = req.body;
 
     // Verifica se todos os campos necessários estão presentes
-    if (!name || !email || !phone) {
+    if (!userId || !name || !email || !phone) {
         return res.status(400).json({ error: 'Todos os campos são necessários.' });
     }
 
     try {
-        // Atualiza ou insere os dados na tabela profile_infos
+        // Atualiza ou insere os dados na tabela profile_infos para o userId especificado
         const { data, error } = await supabase
             .from('profile_infos')
-            .upsert([{ name, email, phone, profile_image: profileImage }]);
+            .upsert([{ id: userId, name, email, phone, profile_image: profileImage }]);
 
         if (error) {
             throw error;
@@ -749,6 +749,7 @@ router.post('/update-profile', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 router.get('/get-profile/:userId', async (req, res) => {
     const { userId } = req.params;
