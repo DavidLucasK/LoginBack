@@ -627,7 +627,7 @@ router.get('/items', async (req, res) => {
 
 router.get('/posts', async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 5; // Definindo o limite padrão como 5
+        const limit = parseInt(req.query.limit) || 10; // Definindo o limite padrão como 5
         const lastId = parseInt(req.query.lastId); // Pega o ID do último post carregado (cursor)
 
         // Se lastId não for um número válido, não aplicamos o filtro 'lt'
@@ -657,22 +657,22 @@ router.get('/posts', async (req, res) => {
 
 
 // router.get('/posts', async (req, res) => {
-//     try {
-//         // Buscar todos os dados da tabela 'posts'
-//         const { data: posts, error } = await supabase
-//             .from('posts')
-//             .select('*');
+//    try {
+//        // Buscar todos os dados da tabela 'posts'
+//       const { data: posts, error } = await supabase
+//         .from('posts')
+//         .select('*');
 
-//         if (error) {
-//             throw error;
-//         }
+//     if (error) {
+//           throw error;
+//       }
 
-//         // Retornar os dados como JSON
-//         res.status(200).json(posts);
-//     } catch (err) {
-//         console.error('Erro ao buscar posts:', err);
-//         res.status(500).json({ message: 'Erro no servidor' });
-//     }
+//       // Retornar os dados como JSON
+//        res.status(200).json(posts);
+//    } catch (err) {
+//        console.error('Erro ao buscar posts:', err);
+//        res.status(500).json({ message: 'Erro no servidor' });
+//    }
 // });
 
 router.post('/upload_post', async (req, res) => {
