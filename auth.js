@@ -167,6 +167,37 @@ router.post('/foto_post', upload.single('photo'), async (req, res) => {
     }
 });
 
+router.post('/upload_imagepic', upload.single('photo'), async (req, res) => {
+    const file = req.file;
+
+    if (!file) {
+        return res.status(400).json({ message: 'Nenhum arquivo enviado' });
+    }
+
+    try {
+        // Gerar um nome de arquivo único com base na data e hora
+        const timestamp = Date.now();
+        const fileName = `${timestamp}_${file.originalname}`;
+
+        const { data, error } = await supabase.storage
+            .from('profile_pics')
+            .upload(fileName, file.buffer, {
+                contentType: file.mimetype,
+                upsert: true
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        const fileUrl = `${supabaseUrl}/storage/v1/object/public/profile-pics/${fileName}`;
+        res.status(200).json({ message: 'Foto enviada com sucesso!', fileUrl });
+    } catch (err) {
+        console.error('Erro ao fazer upload da foto:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 // Endpoint para registro
 router.post('/register', async (req, res) => {
     const { email, password } = req.body;
@@ -663,8 +694,6 @@ router.get('/posts', async (req, res) => {
       res.status(500).json({ message: 'Erro no servidor' });
     }
   });
-  
-
 
 // router.get('/posts', async (req, res) => {
 //    try {
