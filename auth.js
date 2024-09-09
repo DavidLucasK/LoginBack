@@ -806,5 +806,31 @@ router.get('/get-profile/:userId', async (req, res) => {
     }
 });
 
+router.post('/like', async (req, res) => {
+    try {
+        // Capturar o corpo da requisição: likedPostIds
+        const { likedPostIds } = req.body;
+
+        if (!Array.isArray(likedPostIds) || likedPostIds.length === 0) {
+            return res.status(400).json({ message: 'Invalid data' });
+        }
+
+        // Atualizar o campo 'is_liked' dos posts na tabela
+        const { data, error } = await supabase
+            .from('posts')
+            .update({ is_liked: true })
+            .in('id', likedPostIds);
+
+        if (error) {
+            throw error;
+        }
+
+        // Retornar sucesso
+        res.status(200).json({ message: 'Likes updated successfully', updatedPosts: data });
+    } catch (err) {
+        console.error('Erro ao atualizar likes:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
 
 module.exports = router;
