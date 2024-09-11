@@ -683,20 +683,26 @@ router.get('/posts', async (req, res) => {
             .from('posts')
             .select('id', { count: 'exact' });
 
+        // Log para verificar os posts retornados
+        console.log('Posts:', posts);
+
         // Buscando comentários para os posts encontrados
         const postIds = posts.map((post) => post.id); // Obter os IDs dos posts
         const { data: comments, error: commentsError } = await supabase
             .from('comments')
             .select('id_post, comment_text') // Selecionar apenas os campos necessários
-            .in('id_post', postIds); // Busca os comentários onde 'post_id' está na lista de IDs de posts
+            .in('id_post', postIds); // Busca os comentários onde 'id_post' está na lista de IDs de posts
 
         if (commentsError) {
             throw commentsError;
         }
 
-        // Agrupar os comentários por post_id
+        // Log para verificar os comentários retornados
+        console.log('Comentários:', comments);
+
+        // Agrupar os comentários por id_post
         const commentsByPostId = comments.reduce((acc, comment) => {
-            const postId = comment.post_id;
+            const postId = comment.id_post;
             if (!acc[postId]) {
                 acc[postId] = [];
             }
@@ -725,6 +731,7 @@ router.get('/posts', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
   
 
