@@ -690,7 +690,7 @@ router.get('/posts', async (req, res) => {
         const postIds = posts.map((post) => post.id); // Obter os IDs dos posts
         const { data: comments, error: commentsError } = await supabase
             .from('comments')
-            .select('id_post, comment_text') // Selecionar apenas os campos necessários
+            .select('id_post, comment_text', 'username') // Selecionar apenas os campos necessários
             .in('id_post', postIds); // Busca os comentários onde 'id_post' está na lista de IDs de posts
 
         if (commentsError) {
@@ -731,9 +731,6 @@ router.get('/posts', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
-
-
-  
 
 //endpoint otimizado!
 // router.get('/posts', async (req, res) => {
