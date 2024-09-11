@@ -660,68 +660,72 @@ router.get('/items', async (req, res) => {
 //Posts com comentarios
 router.get('/posts', async (req, res) => {
     try {
-      // Capturar query params: page, limit, search, sortBy
-      const page = req.query.page ? parseInt(req.query.page, 10) : 1;
-      const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
-      const offset = (page - 1) * limit;
-      const search = req.query.search || '';
-      const sortBy = req.query.sortBy || 'data'; // Ordena por data de criação por padrão
-  
-      // Fazer a busca na tabela de 'posts' com paginação, filtros e ordenação
-      const { data: posts, error: postsError } = await supabase
-        .from('posts')
-        .select('*') // Selecione apenas os campos necessários
-        .order(sortBy, { ascending: false }) // Ordena os resultados
-        .range(offset, offset + limit - 1); // Paginação
-  
-      if (postsError) {
-        throw postsError;
-      }
-  
-      // Contagem total de posts para controle de páginas no frontend
-      const { count } = await supabase
-        .from('posts')
-        .select('id', { count: 'exact' });
-  
-      // Buscando comentários para os posts encontrados
-      const postIds = posts.map((post) => post.id); // Obter os IDs dos posts
-      const { data: comments, error: commentsError } = await supabase
-        .from('comments')
-        .select('*')
-        .in('id_post', postIds); // Busca os comentários onde 'post_id' está na lista de IDs de posts
-  
-      if (commentsError) {
-        throw commentsError;
-      }
-  
-      // Agrupar os comentários por post_id
-      const commentsByPostId = comments.reduce((acc, comment) => {
-        const postId = comment.post_id;
-        if (!acc[postId]) {
-          acc[postId] = [];
+        // Capturar query params: page, limit, search, sortBy
+        const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+        const sortBy = req.query.sortBy || 'data'; // Ordena por data de criação por padrão
+
+        // Fazer a busca na tabela de 'posts' com paginação, filtros e ordenação
+        const { data: posts, error: postsError } = await supabase
+            .from('posts')
+            .select('*') // Selecione apenas os campos necessários
+            .order(sortBy, { ascending: false }) // Ordena os resultados
+            .range(offset, offset + limit - 1); // Paginação
+
+        if (postsError) {
+            throw postsError;
         }
-        acc[postId].push(comment);
-        return acc;
-      }, {});
-  
-      // Adicionar os comentários aos respectivos posts
-      const postsWithComments = posts.map((post) => ({
-        ...post,
-        comments: commentsByPostId[post.id] || [], // Adiciona os comentários ou uma lista vazia se não houver
-      }));
-  
-      // Retornar os dados paginados e a contagem total
-      res.status(200).json({
-        posts: postsWithComments,
-        totalPages: Math.ceil(count / limit),
-        currentPage: page,
-        totalPosts: count,
-      });
+
+        // Contagem total de posts para controle de páginas no frontend
+        const { count } = await supabase
+            .from('posts')
+            .select('id', { count: 'exact' });
+
+        // Buscando comentários para os posts encontrados
+        const postIds = posts.map((post) => post.id); // Obter os IDs dos posts
+        const { data: comments, error: commentsError } = await supabase
+            .from('comments')
+            .select('post_id, comment_text') // Selecionar apenas os campos necessários
+            .in('post_id', postIds); // Busca os comentários onde 'post_id' está na lista de IDs de posts
+
+        if (commentsError) {
+            throw commentsError;
+        }
+
+        // Agrupar os comentários por post_id
+        const commentsByPostId = comments.reduce((acc, comment) => {
+            const postId = comment.post_id;
+            if (!acc[postId]) {
+                acc[postId] = [];
+            }
+            acc[postId].push(comment.comment_text); // Armazena apenas o texto do comentário
+            return acc;
+        }, {});
+
+        // Adicionar os comentários aos respectivos posts
+        const postsWithComments = posts.map((post) => ({
+            ...post,
+            comments: commentsByPostId[post.id] || [], // Adiciona os comentários ou uma lista vazia se não houver
+        }));
+
+        // Log para depuração
+        console.log('Posts com Comentários:', postsWithComments);
+
+        // Retornar os dados paginados e a contagem total
+        res.status(200).json({
+            posts: postsWithComments,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            totalPosts: count,
+        });
     } catch (err) {
-      console.error('Erro ao buscar posts:', err);
-      res.status(500).json({ message: 'Erro no servidor' });
+        console.error('Erro ao buscar posts:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
   
 
 //endpoint otimizado!
