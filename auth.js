@@ -914,4 +914,43 @@ router.post('/like', async (req, res) => {
     }
 });
 
+// Endpoint para adicionar um comentário
+router.post('/comment', async (req, res) => {
+    try {
+        // Capturar o corpo da requisição: id_post e comment_text
+        const { id_post, comment_text, username } = req.body;
+
+        if (!id_post || !comment_text || typeof comment_text !== 'string') {
+            return res.status(400).json({ message: 'Invalid data' });
+        }
+
+        const now = new Date();
+        now.setHours(now.getHours() - 3); // Subtrai 3 horas
+        const adjustedDate = now.toISOString();
+
+        // Inserir o novo comentário na tabela 'comments'
+        const { data, error } = await supabase
+            .from('comments')
+            .insert([
+                {
+                    id_post: id_post,
+                    comment_text: comment_text,
+                    created_at: adjustedDate,
+                    username: username,
+                    // Você pode adicionar mais campos aqui, como a data do comentário, se necessário
+                }
+            ]);
+
+        if (error) {
+            throw error;
+        }
+
+        // Retornar sucesso
+        res.status(200).json({ message: 'Comment added successfully', comment: data[0] });
+    } catch (err) {
+        console.error('Erro ao adicionar comentário:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 module.exports = router;
