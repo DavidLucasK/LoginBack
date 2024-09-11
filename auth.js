@@ -688,7 +688,7 @@ router.get('/posts', async (req, res) => {
       const { data: comments, error: commentsError } = await supabase
         .from('comments')
         .select('*')
-        .in('post_id', postIds); // Busca os comentários onde 'post_id' está na lista de IDs de posts
+        .in('id_post', postIds); // Busca os comentários onde 'post_id' está na lista de IDs de posts
   
       if (commentsError) {
         throw commentsError;
