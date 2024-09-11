@@ -951,7 +951,7 @@ router.post('/comment', async (req, res) => {
             res.status(200).json({ message: 'Comment added successfully', comment: data[0] });
         } else {
             // Caso `data` esteja vazio
-            res.status(500).json({ message: 'Failed to add comment' });
+            res.status(200).json({ message: 'comentario vazio' });
         }
     } catch (err) {
         console.error('Erro ao adicionar comentário:', err);
