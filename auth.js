@@ -690,7 +690,7 @@ router.get('/posts', async (req, res) => {
         const postIds = posts.map((post) => post.id); // Obter os IDs dos posts
         const { data: comments, error: commentsError } = await supabase
             .from('comments')
-            .select('id_post, comment_text', 'username') // Selecionar apenas os campos necessários
+            .select('id_post, comment_text, username') // Selecionar 'id_post', 'comment_text' e 'username'
             .in('id_post', postIds); // Busca os comentários onde 'id_post' está na lista de IDs de posts
 
         if (commentsError) {
@@ -700,24 +700,28 @@ router.get('/posts', async (req, res) => {
         // Log para verificar os comentários retornados
         console.log('Comentários:', comments);
 
-        // Agrupar os comentários por id_post
+        // Agrupar os comentários por id_post e incluir o username
         const commentsByPostId = comments.reduce((acc, comment) => {
             const postId = comment.id_post;
             if (!acc[postId]) {
                 acc[postId] = [];
             }
-            acc[postId].push(comment.comment_text); // Armazena apenas o texto do comentário
+            // Adiciona o texto do comentário e o username
+            acc[postId].push({
+                comment_text: comment.comment_text,
+                username: comment.username
+            });
             return acc;
         }, {});
 
-        // Adicionar os comentários aos respectivos posts
+        // Adicionar os comentários e usernames aos respectivos posts
         const postsWithComments = posts.map((post) => ({
             ...post,
-            comments: commentsByPostId[post.id] || [], // Adiciona os comentários ou uma lista vazia se não houver
+            comments: commentsByPostId[post.id] || [], // Adiciona os comentários (com usernames) ou uma lista vazia se não houver
         }));
 
         // Log para depuração
-        console.log('Posts com Comentários:', postsWithComments);
+        console.log('Posts com Comentários e Usernames:', postsWithComments);
 
         // Retornar os dados paginados e a contagem total
         res.status(200).json({
@@ -731,6 +735,7 @@ router.get('/posts', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 //endpoint otimizado!
 // router.get('/posts', async (req, res) => {
