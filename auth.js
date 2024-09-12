@@ -736,64 +736,55 @@ router.get('/posts', async (req, res) => {
     }
 });
 
+router.get('/post/:id', async (req, res) => {
+    try {
+        // Capturar o id do post a partir dos parâmetros da rota
+        const postId = req.params.id;
 
-//endpoint otimizado!
-// router.get('/posts', async (req, res) => {
-//     try {
-//       // Capturar query params: page, limit, search, sortBy
-//       const page = req.query.page ? parseInt(req.query.page, 10) : 1;
-//       const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
-//       const offset = (page - 1) * limit;
-//       const search = req.query.search || '';
-//       const sortBy = req.query.sortBy || 'data'; // Ordena por data de criação por padrão
-  
-//       // Fazer a busca na tabela de 'posts' com paginação, filtros e ordenação
-//       const { data: posts, error } = await supabase
-//         .from('posts')
-//         .select('*') // Selecione apenas os campos necessários
-//         .order(sortBy, { ascending: false }) // Ordena os resultados
-//         .range(offset, offset + limit - 1); // Paginação
-  
-//       // Contagem total de posts para controle de páginas no frontend
-//       const { count } = await supabase
-//         .from('posts')
-//         .select('id', { count: 'exact' });
-  
-//       if (error) {
-//         throw error;
-//       }
-  
-//       // Retornar os dados paginados e a contagem total
-//       res.status(200).json({
-//         posts,
-//         totalPages: Math.ceil(count / limit),
-//         currentPage: page,
-//         totalPosts: count,
-//       });
-//     } catch (err) {
-//       console.error('Erro ao buscar posts:', err);
-//       res.status(500).json({ message: 'Erro no servidor' });
-//     }
-//   });
+        if (!postId) {
+            return res.status(400).json({ message: 'Post ID is required' });
+        }
 
-// router.get('/posts', async (req, res) => {
-//    try {
-//        // Buscar todos os dados da tabela 'posts'
-//       const { data: posts, error } = await supabase
-//         .from('posts')
-//         .select('*');
+        // Buscar o post com o id fornecido
+        const { data: post, error: postError } = await supabase
+            .from('posts')
+            .select('*')
+            .eq('id', postId) // Filtra pelo id do post
+            .single(); // Retorna um único post
 
-//     if (error) {
-//           throw error;
-//       }
+        if (postError) {
+            throw postError;
+        }
 
-//       // Retornar os dados como JSON
-//        res.status(200).json(posts);
-//    } catch (err) {
-//        console.error('Erro ao buscar posts:', err);
-//        res.status(500).json({ message: 'Erro no servidor' });
-//    }
-// });
+        // Se o post não for encontrado
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // Buscar os comentários associados ao post
+        const { data: comments, error: commentsError } = await supabase
+            .from('comments')
+            .select('id_post, comment_text, username')
+            .eq('id_post', postId); // Filtra os comentários pelo id do post
+
+        if (commentsError) {
+            throw commentsError;
+        }
+
+        // Adicionar os comentários ao post
+        const postWithComments = {
+            ...post,
+            comments: comments || [], // Se não houver comentários, retorna um array vazio
+        };
+
+        // Retornar o post com seus comentários
+        res.status(200).json(postWithComments);
+    } catch (err) {
+        console.error('Erro ao buscar o post:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 
 router.post('/upload_post', async (req, res) => {
     const { nome_foto, desc_foto, username } = req.body;
@@ -958,6 +949,7 @@ router.post('/comment', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 
 module.exports = router;
