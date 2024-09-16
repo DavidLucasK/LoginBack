@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
@@ -251,7 +252,7 @@ router.post('/login', async (req, res) => {
         }
 
         if (!user) {
-            return res.status(400).json({ message: `Senha incorreta para ${email} ou email não cadastrado` });
+            return res.status(400).json({ message: `Usuário ${user} não existe!` });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
