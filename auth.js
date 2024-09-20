@@ -167,6 +167,37 @@ router.post('/foto_post', upload.single('photo'), async (req, res) => {
     }
 });
 
+router.post('/foto_store', upload.single('photo'), async (req, res) => {
+    const file = req.file;
+
+    if (!file) {
+        return res.status(400).json({ message: 'Nenhum arquivo enviado' });
+    }
+
+    try {
+        // Gerar um nome de arquivo único com base na data e hora
+        const timestamp = Date.now();
+        const fileName = `${timestamp}_${file.originalname}`;
+
+        const { data, error } = await supabase.storage
+            .from('store_images')
+            .upload(fileName, file.buffer, {
+                contentType: file.mimetype,
+                upsert: true
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        const fileUrl = `${supabaseUrl}/storage/v1/object/public/store_images/${fileName}`;
+        res.status(200).json({ message: 'Foto enviada com sucesso!', fileUrl });
+    } catch (err) {
+        console.error('Erro ao fazer upload da foto:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 router.post('/upload_imagepic', upload.single('photo'), async (req, res) => {
     const file = req.file;
 
