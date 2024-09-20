@@ -656,6 +656,48 @@ router.get('/items', async (req, res) => {
     }
 });
 
+// Endpoint para listar todos os itens da loja
+router.get('/create_item', async (req, res) => {
+    const { title_item, desc_item, points, image_url } = req.body;
+
+    if (!title_item) {
+        return res.status(400).json({ error: 'Titulo do item é necessário.' });
+    }
+
+    if (!desc_item) {
+        return res.status(400).json({ error: 'Descrição do item é necessária.' });
+    }
+
+    if (!points) {
+        return res.status(400).json({ error: 'Pontos são necessários.' });
+    }
+
+    if (!image_url) {
+        return res.status(400).json({ error: 'Imagem do item é necessária.' });
+    }
+
+    try {
+        const { data, error } = await supabase
+        .from('store')
+        .insert([
+            {
+                name: title_item,
+                description: desc_item,
+                points_required: points,
+                image_url: image_url,
+            }
+        ]);
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(201).json({ message: 'Item criado com sucesso!', data });
+
+    } catch (err) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 //Posts com comentarios
 router.get('/posts', async (req, res) => {
