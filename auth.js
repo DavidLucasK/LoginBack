@@ -688,7 +688,7 @@ router.get('/items', async (req, res) => {
 });
 
 // Endpoint para listar todos os itens da loja
-router.get('/create_item', async (req, res) => {
+router.post('/create_item', async (req, res) => {
     const { title_item, desc_item, points, image_url } = req.body;
 
     if (!title_item) {
