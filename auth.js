@@ -726,7 +726,8 @@ router.post('/create_item', async (req, res) => {
         res.status(201).json({ message: 'Item criado com sucesso!', data });
 
     } catch (err) {
-        res.status(500).json({ error: error.message });
+        console.error('Erro ao criar item:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
     }
 });
 
