@@ -595,12 +595,13 @@ router.get('/questions', async (req, res) => {
 });
 
 // Endpoint para verificar o status do quiz
-router.get('/quiz-status', async (req, res) => {
+router.get('/quiz-status/:userId', async (req, res) => {
+    const { userId } = req.params;
     try {
         const { data, error } = await supabase
             .from('status_quiz')
             .select('is_completed')
-            .eq('id', 1)
+            .eq('id', userId)
             .single();
 
         if (error) {
@@ -634,7 +635,8 @@ router.get('/quiz-status-test', async (req, res) => {
 });
 
 // Endpoint para atualizar o status do quiz
-router.post('/update-quiz-status', async (req, res) => {
+router.post('/update-quiz-status/:userId', async (req, res) => {
+    const { userId } = req.params;
     try {
         const { error } = await supabase
             .from('status_quiz')
@@ -642,7 +644,7 @@ router.post('/update-quiz-status', async (req, res) => {
                 data_ultimo_quiz: new Date(),
                 is_completed: true
             })
-            .eq('id', 1);
+            .eq('id', userId);
 
         if (error) {
             throw error;
