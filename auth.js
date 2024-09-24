@@ -686,7 +686,7 @@ router.get('/items/:partnerId', async (req, res) => {
         const { data: items, error } = await supabase
             .from('store')
             .select('*')
-            .where('id', partnerId);
+            .eq('id', partnerId);
 
         if (error) {
             throw error;
