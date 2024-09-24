@@ -700,8 +700,9 @@ router.get('/items/:partnerId', async (req, res) => {
 });
 
 // Endpoint para listar todos os itens da loja
-router.post('/create_item', async (req, res) => {
-    const { title_item, desc_item, points, image_url, userId } = req.body;
+router.post('/create_item/:partnerId', async (req, res) => {
+    const { title_item, desc_item, points, image_url } = req.body;
+    const { partnerId } = req.params;
 
     if (!title_item) {
         return res.status(400).json({ error: 'Titulo do item é necessário.' });
@@ -719,8 +720,8 @@ router.post('/create_item', async (req, res) => {
         return res.status(400).json({ error: 'Imagem do item é necessária.' });
     }
 
-    if (!userId) {
-        return res.status(400).json({ error: 'UserId é necessária.' });
+    if (!partnerId) {
+        return res.status(400).json({ error: 'partnerId é necessário.' });
     }
 
     try {
@@ -732,7 +733,7 @@ router.post('/create_item', async (req, res) => {
                 description: desc_item,
                 points_required: points,
                 image_url: image_url,
-
+                id_partner_view: partnerId,
             }
         ]);
 
