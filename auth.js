@@ -679,11 +679,14 @@ router.post('/update-quiz-status-test', async (req, res) => {
 });
 
 // Endpoint para listar todos os itens da loja
-router.get('/items', async (req, res) => {
+router.get('/items/:partnerId', async (req, res) => {
+    const { partnerId } = req.params;
+    //partnerId é do usuario que criou o item pra você
     try {
         const { data: items, error } = await supabase
             .from('store')
-            .select('*');
+            .select('*')
+            .eq('id', partnerId);
 
         if (error) {
             throw error;
@@ -698,7 +701,7 @@ router.get('/items', async (req, res) => {
 
 // Endpoint para listar todos os itens da loja
 router.post('/create_item', async (req, res) => {
-    const { title_item, desc_item, points, image_url } = req.body;
+    const { title_item, desc_item, points, image_url, userId } = req.body;
 
     if (!title_item) {
         return res.status(400).json({ error: 'Titulo do item é necessário.' });
@@ -716,6 +719,10 @@ router.post('/create_item', async (req, res) => {
         return res.status(400).json({ error: 'Imagem do item é necessária.' });
     }
 
+    if (!userId) {
+        return res.status(400).json({ error: 'UserId é necessária.' });
+    }
+
     try {
         const { data, error } = await supabase
         .from('store')
@@ -725,6 +732,7 @@ router.post('/create_item', async (req, res) => {
                 description: desc_item,
                 points_required: points,
                 image_url: image_url,
+
             }
         ]);
 
