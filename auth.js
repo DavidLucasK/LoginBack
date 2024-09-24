@@ -472,7 +472,8 @@ router.get('/points-test', async (req, res) => {
 
 // Endpoint para atualizar pontos do usuário após um minigame
 router.post('/update-points/:userId', async (req, res) => {
-    const { userId, pointsEarned } = req.params;
+    const { userId } = req.params;
+    const { pointsEarned } = req.body;
 
     if (!username || pointsEarned === undefined) {
         return res.status(400).json({ message: 'Dados incompletos' });
