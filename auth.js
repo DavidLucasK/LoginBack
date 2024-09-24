@@ -424,11 +424,12 @@ router.post('/reset', async (req, res) => {
 
 // Endpoint para buscar a quantidade de pontos de um usuário
 router.get('/points', async (req, res) => {
+    const { userId } = req.body;
     try {
         const { data: userPoints, error } = await supabase
             .from('user_points')
             .select('points')
-            .eq('username', 'amor')
+            .eq('id', userId)
             .single();  // Obtém um único registro
 
         if (error) {
