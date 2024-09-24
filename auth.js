@@ -423,8 +423,8 @@ router.post('/reset', async (req, res) => {
 });
 
 // Endpoint para buscar a quantidade de pontos de um usuário
-router.get('/points', async (req, res) => {
-    const { userId } = req.body;
+router.get('/points/:userId', async (req, res) => {
+    const { userId } = req.params;
     try {
         const { data: userPoints, error } = await supabase
             .from('user_points')
