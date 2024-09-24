@@ -686,7 +686,7 @@ router.get('/items/:partnerId', async (req, res) => {
         const { data: items, error } = await supabase
             .from('store')
             .select('*')
-            .eq('id', partnerId);
+            .eq('id_partner_view', partnerId);
 
         if (error) {
             throw error;
