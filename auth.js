@@ -471,8 +471,8 @@ router.get('/points-test', async (req, res) => {
 });
 
 // Endpoint para atualizar pontos do usuário após um minigame
-router.post('/update-points', async (req, res) => {
-    const { username, pointsEarned } = req.body;
+router.post('/update-points/:userId', async (req, res) => {
+    const { userId, pointsEarned } = req.params;
 
     if (!username || pointsEarned === undefined) {
         return res.status(400).json({ message: 'Dados incompletos' });
@@ -483,7 +483,7 @@ router.post('/update-points', async (req, res) => {
         const { data: userPoints, error: fetchError } = await supabase
             .from('user_points')
             .select('points')
-            .eq('username', username)
+            .eq('id', userId)
             .single();
 
         if (fetchError || !userPoints) {
@@ -497,7 +497,7 @@ router.post('/update-points', async (req, res) => {
         const { error: updateError } = await supabase
             .from('user_points')
             .update({ points: newPoints, last_updated: new Date() })
-            .eq('username', username);
+            .eq('id', userId);
 
         if (updateError) {
             throw updateError;
