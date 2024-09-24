@@ -475,17 +475,19 @@ router.post('/update-points/:userId', async (req, res) => {
     const { userId } = req.params;
     const { pointsEarned } = req.body;
 
-    if (!username || pointsEarned === undefined) {
+    if (!userId || pointsEarned === undefined) {
         return res.status(400).json({ message: 'Dados incompletos' });
     }
 
     try {
         // Obter os pontos atuais do usuário
+        console.error('obtendo dados do user')
         const { data: userPoints, error: fetchError } = await supabase
             .from('user_points')
             .select('points')
             .eq('id', userId)
             .single();
+        console.error('dados obtidos com user:', userId)
 
         if (fetchError || !userPoints) {
             return res.status(404).json({ message: 'Usuário não encontrado' });
@@ -495,10 +497,13 @@ router.post('/update-points/:userId', async (req, res) => {
         const newPoints = userPoints.points + (pointsEarned);
 
         // Atualizar pontos do usuário
+        console.error('tentando atualizar')
         const { error: updateError } = await supabase
             .from('user_points')
             .update({ points: newPoints, last_updated: new Date() })
             .eq('id', userId);
+
+        console.error('Foi')
 
         if (updateError) {
             throw updateError;
