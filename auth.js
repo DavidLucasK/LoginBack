@@ -28,8 +28,9 @@ const transporter = nodemailer.createTransport({
 });
 
 //Grava o resgate feito pelo usuário na tabela resgates
-router.post('/insert-redemption', async (req, res) => {
-    const { userId, rewardId, pointsRequired } = req.body;
+router.post('/insert-redemption/:userId', async (req, res) => {
+    const {rewardId, pointsRequired } = req.body;
+    const { userId } = req.params;
 
     try {
         //Buscando o nome do item
@@ -57,7 +58,7 @@ router.post('/insert-redemption', async (req, res) => {
             from: process.env.EMAIL,
             to: "davidlucasfr70@gmail.com",
             subject: 'Resgate na Loja!!',
-            text: `A Marcela resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
+            text: `O usuario com id ${userId} resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
             html: `
                 <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
                     <h2 style="color: #333;">Resgate na Loja!!</h2>
