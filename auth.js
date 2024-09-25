@@ -62,6 +62,7 @@ router.post('/insert-redemption/:userId', async (req, res) => {
             html: `
                 <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
                     <h2 style="color: #333;">Resgate na Loja!!</h2>
+                    <span style="color: #666;">O usuario com id ${userId} resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos</span>
                     <p style="color: #666;">Clique abaixo para ver o resgate na loja da Supabase</p>
                     <a href="https://supabase.com/dashboard/project/ojxyfmbpzjypidukzlqf/editor/30141" style="background-color: #bd11a8; color: #F5F3F4; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Resgate da Ma</a>
                 </div>
