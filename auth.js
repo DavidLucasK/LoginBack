@@ -754,7 +754,7 @@ router.post('/create_item/:partnerId', async (req, res) => {
 
 // Endpoint para atualizar um item da loja
 router.post('/update_item/:itemId', async (req, res) => {
-    const { itemPoints } = req.body;
+    const { itemName, itemDesc, itemPoints } = req.body;
     const { itemId } = req.params;
 
     try {
@@ -762,6 +762,8 @@ router.post('/update_item/:itemId', async (req, res) => {
         const { data, error } = await supabase
             .from('store')
             .update({
+                name: itemName,
+                description: itemDesc,
                 points_required: itemPoints,
             })
             .eq('id', itemId); // Filtra pelo itemId
