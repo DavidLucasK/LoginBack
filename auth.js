@@ -752,6 +752,32 @@ router.post('/create_item/:partnerId', async (req, res) => {
     }
 });
 
+// Endpoint para listar todos os itens da loja
+// Endpoint para excluir um item da loja
+router.delete('/delete_item/:itemId', async (req, res) => {
+    const { itemId } = req.params;
+
+    try {
+        // Excluindo o item com o itemId fornecido
+        const { data, error } = await supabase
+            .from('store')
+            .delete()
+            .eq('id', itemId); // Filtra pelo itemId
+
+        if (error) {
+            throw error; // Lança um erro se houver
+        }
+
+        // Se não houver erro, retorna os dados da exclusão
+        res.status(200).json({ message: 'Item excluído com sucesso!', data });
+
+    } catch (err) {
+        console.error('Erro ao excluir item:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+
 //Posts com comentarios
 router.get('/posts', async (req, res) => {
     try {
