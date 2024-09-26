@@ -596,6 +596,47 @@ router.get('/questions', async (req, res) => {
     }
 });
 
+// Endpoint para buscar perguntas e respostas com id da pergunta
+router.get('/questionSingle/:idPergunta', async (req, res) => {
+    const { idPergunta } = req.params;
+    try {
+        // Buscar a pergunta com o id fornecido
+        const { data: question, error: questionError } = await supabase
+            .from('perguntas')
+            .select('*')  // Qualificar colunas explicitamente
+            .eq('id', idPergunta)
+            .single(); // Para garantir que apenas uma pergunta seja retornada
+
+        if (questionError) {
+            throw questionError;
+        }
+
+        if (!question) {
+            return res.status(404).json({ message: 'Pergunta não encontrada' });
+        }
+
+        // Buscar respostas para a pergunta selecionada
+        const { data: answers, error: answersError } = await supabase
+            .from('respostas')
+            .select('id, pergunta_id, resposta, is_correta')  // Qualificar colunas explicitamente
+            .eq('pergunta_id', idPergunta); // Filtra as respostas pela pergunta selecionada
+
+        if (answersError) {
+            throw answersError;
+        }
+
+        // Retornar a pergunta e suas respostas
+        res.status(200).json({
+            question,
+            answers,
+        });
+    } catch (err) {
+        console.error('Erro ao buscar pergunta e respostas:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+
 // Endpoint para buscar perguntas e respostas TODAS
 router.get('/questionsAll/:partnerId', async (req, res) => {
     const { partnerId } = req.params;
