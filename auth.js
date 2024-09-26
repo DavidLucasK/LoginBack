@@ -1186,7 +1186,7 @@ router.post('/update-profile/:userId', async (req, res) => {
         // Atualiza ou insere os dados na tabela profile_infos para o userId especificado
         const { data, error } = await supabase
             .from('profile_infos')
-            .upsert([{ name, email, phone, profile_image: profileImage }])
+            .update([{ name, email, phone, profile_image: profileImage }])
             .eq ('id', userId);
 
         if (error) {
