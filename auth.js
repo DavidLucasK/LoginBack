@@ -658,11 +658,17 @@ router.post('/createQuestion', async (req, res) => {
             throw questionError;
         }
 
+        // Verifique se a resposta correta existe dentro das respostas fornecidas
+        const respostaCorreta = respostas.find((resposta) => resposta.id === corretaId);
+        if (!respostaCorreta) {
+            return res.status(400).json({ message: 'A resposta correta fornecida não está presente nas respostas enviadas.' });
+        }
+
         // Inserir as respostas na tabela respostas
-        const respostasData = respostas.map((resposta, index) => ({
+        const respostasData = respostas.map((resposta) => ({
             pergunta_id: newQuestion.id, // Referencia o ID da nova pergunta
             resposta: resposta.texto, // Supondo que cada resposta tem um campo 'texto'
-            is_correta: resposta.id === corretaId // Verifica se a resposta é a correta
+            is_correta: resposta.id === corretaId, // Verifica se a resposta é a correta pelo id
         }));
 
         const { error: answersError } = await supabase
@@ -683,6 +689,7 @@ router.post('/createQuestion', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 
 // Endpoint para buscar perguntas e respostas TODAS
