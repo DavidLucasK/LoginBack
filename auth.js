@@ -704,7 +704,7 @@ router.post('/editQuestion/:idPergunta', async (req, res) => {
         // Atualiza a pergunta
         const { error: updateQuestionError } = await supabase
             .from('perguntas')
-            .update({ pergunta }) // Atualiza a pergunta com o novo valor
+            .update({ pergunta, resposta_correta: indiceCorreta }) // Atualiza a pergunta com o novo valor
             .eq('id', idPergunta); // Filtra pela pergunta que deve ser atualizada
 
         if (updateQuestionError) {
