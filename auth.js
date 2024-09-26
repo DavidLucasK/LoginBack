@@ -693,15 +693,26 @@ router.post('/createQuestion', async (req, res) => {
 // Endpoint para editar perguntas e respostas
 router.post('/editQuestion/:id', async (req, res) => {
     const { id } = req.params; // Captura o ID da pergunta da URL
-    const { pergunta, corretaId, respostas } = req.body;
+    const { pergunta, indiceCorreta, respostas } = req.body; // Altera 'corretaId' para 'indiceCorreta'
 
     try {
+        // Verifique se o índice da resposta correta está entre 0 e 3
+        if (indiceCorreta < 0 || indiceCorreta > 3) {
+            return res.status(400).json({ message: 'O índice da resposta correta deve estar entre 0 e 3.' });
+        }
+
+        // Identifica a resposta correta com base no índice
+        const respostaCorreta = respostas[indiceCorreta];
+        if (!respostaCorreta) {
+            return res.status(400).json({ message: 'A resposta correta fornecida não está presente nas respostas enviadas.' });
+        }
+
         // Atualizar a pergunta na tabela perguntas
         const { data: updatedQuestion, error: questionError } = await supabase
             .from('perguntas')
             .update({
                 pergunta: pergunta,
-                resposta_correta: corretaId // Atualiza o ID da resposta correta
+                resposta_correta: respostaCorreta.id // Atualiza o ID da resposta correta com base no índice
             })
             .eq('id', id) // Atualiza a pergunta específica com base no ID
             .select('*')
@@ -711,17 +722,11 @@ router.post('/editQuestion/:id', async (req, res) => {
             throw questionError;
         }
 
-        // Verifique se a resposta correta existe dentro das respostas fornecidas
-        const respostaCorreta = respostas.find((resposta) => resposta.id === corretaId);
-        if (!respostaCorreta) {
-            return res.status(400).json({ message: 'A resposta correta fornecida não está presente nas respostas enviadas.' });
-        }
-
         // Atualizar as respostas na tabela respostas
-        const respostasData = respostas.map((resposta) => ({
+        const respostasData = respostas.map((resposta, index) => ({
             id: resposta.id, // O ID da resposta para atualização
             resposta: resposta.resposta, // Altere 'texto' para 'resposta' se o campo for 'resposta'
-            is_correta: resposta.id === corretaId, // Verifica se a resposta é a correta pelo id
+            is_correta: index === indiceCorreta, // Verifica se a resposta é a correta pelo índice
         }));
 
         for (const resposta of respostasData) {
@@ -748,6 +753,7 @@ router.post('/editQuestion/:id', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 // Endpoint para buscar perguntas e respostas TODAS
 router.get('/questionsAll/:partnerId', async (req, res) => {
