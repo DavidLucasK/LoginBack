@@ -596,6 +596,30 @@ router.get('/questions', async (req, res) => {
     }
 });
 
+// Endpoint para buscar perguntas e respostas TODAS
+router.get('/questionsAll:partnerId', async (req, res) => {
+    const { partnerId } = req.params;
+    try {
+        const { data: questions, error: questionsError } = await supabase
+            .from('perguntas')
+            .select('*')  // Qualificar colunas explicitamente
+            .eq('partner_id', partnerId); // Filtra as respostas pelas perguntas selecionadas
+
+        if (questionsError) {
+            throw questionsError;
+        }
+
+        if (questions.length === 0) {
+            return res.status(404).json({ message: 'Nenhuma pergunta sem resposta encontrada para este partnerId' });
+        }
+
+        res.status(200).json(questions);
+    } catch (err) {
+        console.error('Erro ao buscar perguntas e respostas:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 // Endpoint para verificar o status do quiz
 router.get('/quiz-status/:userId', async (req, res) => {
     const { userId } = req.params;
