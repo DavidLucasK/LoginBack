@@ -738,6 +738,37 @@ router.post('/editQuestion/:idPergunta', async (req, res) => {
     }
 });
 
+// Endpoint para excluir uma pergunta e suas respostas
+router.delete('/deleteQuestion/:idPergunta', async (req, res) => {
+    const { idPergunta } = req.params;
+
+    try {
+        // Primeiro, exclui as respostas associadas à pergunta
+        const { error: deleteAnswersError } = await supabase
+            .from('respostas')
+            .delete()
+            .eq('pergunta_id', idPergunta); // Filtra as respostas pela pergunta
+
+        if (deleteAnswersError) {
+            throw deleteAnswersError;
+        }
+
+        // Em seguida, exclui a pergunta
+        const { error: deleteQuestionError } = await supabase
+            .from('perguntas')
+            .delete()
+            .eq('id', idPergunta); // Filtra pela pergunta a ser excluída
+
+        if (deleteQuestionError) {
+            throw deleteQuestionError;
+        }
+
+        res.status(200).json({ message: 'Pergunta e respostas excluídas com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao excluir pergunta e respostas:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
 
 // Endpoint para buscar perguntas e respostas TODAS
 router.get('/questionsAll/:partnerId', async (req, res) => {
