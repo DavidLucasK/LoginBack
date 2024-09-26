@@ -597,7 +597,7 @@ router.get('/questions', async (req, res) => {
 });
 
 // Endpoint para buscar perguntas e respostas TODAS
-router.get('/questionsAll:partnerId', async (req, res) => {
+router.get('/questionsAll/:partnerId', async (req, res) => {
     const { partnerId } = req.params;
     try {
         const { data: questions, error: questionsError } = await supabase
