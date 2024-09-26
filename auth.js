@@ -696,9 +696,9 @@ router.post('/editQuestion/:id', async (req, res) => {
     const { pergunta, indiceCorreta, respostas } = req.body; // Altera 'corretaId' para 'indiceCorreta'
 
     try {
-        // Verifique se o índice da resposta correta está entre 0 e 3
-        if (indiceCorreta < 0 || indiceCorreta > 3) {
-            return res.status(400).json({ message: 'O índice da resposta correta deve estar entre 0 e 3.' });
+        // Verifique se o índice da resposta correta está entre 1 e 4
+        if (indiceCorreta < 1 || indiceCorreta > 4) {
+            return res.status(400).json({ message: 'O índice da resposta correta deve estar entre 1 e 4.' });
         }
 
         // Atualizar a pergunta na tabela perguntas
