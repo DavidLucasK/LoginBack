@@ -1173,11 +1173,12 @@ router.post('/upload_post', async (req, res) => {
 });
 
 // Endpoint para inserir ou atualizar informações do perfil
-router.post('/update-profile', async (req, res) => {
-    const { userId, name, email, phone, profileImage } = req.body;
+router.post('/update-profile/:userId', async (req, res) => {
+    const { name, email, phone, profileImage } = req.body;
+    const { userId } = req.params
 
     // Verifica se todos os campos necessários estão presentes
-    if (!userId || !name || !email || !phone) {
+    if (!name || !email || !phone) {
         return res.status(400).json({ error: 'Todos os campos são necessários.' });
     }
 
@@ -1185,7 +1186,8 @@ router.post('/update-profile', async (req, res) => {
         // Atualiza ou insere os dados na tabela profile_infos para o userId especificado
         const { data, error } = await supabase
             .from('profile_infos')
-            .upsert([{ id: userId, name, email, phone, profile_image: profileImage }]);
+            .upsert([{ name, email, phone, profile_image: profileImage }])
+            .eq ('id', userId);
 
         if (error) {
             throw error;
