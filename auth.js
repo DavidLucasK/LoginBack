@@ -636,6 +636,54 @@ router.get('/questionSingle/:idPergunta', async (req, res) => {
     }
 });
 
+// Endpoint para criar perguntas e respostas
+router.post('/createQuestion', async (req, res) => {
+    const { pergunta, corretaId, partnerId, respostas } = req.body;
+
+    try {
+        // Inserir a nova pergunta na tabela perguntas
+        const { data: newQuestion, error: questionError } = await supabase
+            .from('perguntas')
+            .insert([
+                {
+                    pergunta: pergunta,
+                    resposta_correta: corretaId, // O ID da resposta correta
+                    partner_id: partnerId
+                }
+            ])
+            .select('*')
+            .single(); // Obtém a nova pergunta inserida
+
+        if (questionError) {
+            throw questionError;
+        }
+
+        // Inserir as respostas na tabela respostas
+        const respostasData = respostas.map((resposta, index) => ({
+            pergunta_id: newQuestion.id, // Referencia o ID da nova pergunta
+            resposta: resposta.texto, // Supondo que cada resposta tem um campo 'texto'
+            is_correta: resposta.id === corretaId // Verifica se a resposta é a correta
+        }));
+
+        const { error: answersError } = await supabase
+            .from('respostas')
+            .insert(respostasData);
+
+        if (answersError) {
+            throw answersError;
+        }
+
+        res.status(201).json({
+            message: 'Pergunta e respostas criadas com sucesso!',
+            question: newQuestion,
+            respostas: respostasData,
+        });
+    } catch (err) {
+        console.error('Erro ao criar pergunta e respostas:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 
 // Endpoint para buscar perguntas e respostas TODAS
 router.get('/questionsAll/:partnerId', async (req, res) => {
