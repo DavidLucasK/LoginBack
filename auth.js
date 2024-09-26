@@ -690,64 +690,53 @@ router.post('/createQuestion', async (req, res) => {
     }
 });
 
-// Endpoint para editar perguntas e respostas
-router.post('/editQuestion/:id', async (req, res) => {
-    const { id } = req.params; // Captura o ID da pergunta da URL
-    const { pergunta, indiceCorreta, respostas } = req.body; // Altera 'corretaId' para 'indiceCorreta'
+// Endpoint para editar uma pergunta e suas respostas
+router.post('/editQuestion/:idPergunta', async (req, res) => {
+    const { idPergunta } = req.params;
+    const { pergunta, indiceCorreta, respostas } = req.body; // Captura a pergunta, o índice da resposta correta e as respostas
+
+    // Verifique se o índice da resposta correta está entre 1 e 4
+    if (indiceCorreta < 1 || indiceCorreta > 4) {
+        return res.status(400).json({ message: 'O índice da resposta correta deve estar entre 1 e 4.' });
+    }
 
     try {
-        // Verifique se o índice da resposta correta está entre 1 e 4
-        if (indiceCorreta < 1 || indiceCorreta > 4) {
-            return res.status(400).json({ message: 'O índice da resposta correta deve estar entre 1 e 4.' });
-        }
-
-        // Atualizar a pergunta na tabela perguntas
-        const { data: updatedQuestion, error: questionError } = await supabase
+        // Atualiza a pergunta
+        const { error: updateQuestionError } = await supabase
             .from('perguntas')
-            .update({
-                pergunta: pergunta,
-                resposta_correta: indiceCorreta // Atualiza o índice da resposta correta
-            })
-            .eq('id', id) // Atualiza a pergunta específica com base no ID
-            .select('*')
-            .single(); // Obtém a pergunta atualizada
+            .update({ pergunta }) // Atualiza a pergunta com o novo valor
+            .eq('id', idPergunta); // Filtra pela pergunta que deve ser atualizada
 
-        if (questionError) {
-            throw questionError;
+        if (updateQuestionError) {
+            throw updateQuestionError;
         }
 
-        // Atualizar as respostas na tabela respostas
-        const respostasData = respostas.map((resposta, index) => ({
-            id: resposta.id, // O ID da resposta para atualização
-            resposta: resposta.resposta, // Altera 'texto' para 'resposta' se o campo for 'resposta'
-            is_correta: index === indiceCorreta, // Verifica se a resposta é a correta pelo índice
-        }));
+        // Atualiza as respostas
+        for (const resposta of respostas) {
+            const { id, resposta: respostaTexto } = resposta;
 
-        for (const resposta of respostasData) {
-            const { error: answerError } = await supabase
+            // Verifica se a resposta atual deve ser marcada como correta
+            const isCorreta = respostas.findIndex(r => r.id === id) === (indiceCorreta - 1); // Ajusta o índice para 0-3
+
+            const { error: updateAnswerError } = await supabase
                 .from('respostas')
                 .update({
-                    resposta: resposta.resposta,
-                    is_correta: resposta.is_correta,
+                    resposta: respostaTexto,
+                    is_correta: isCorreta // Define se a resposta é correta com base na lógica
                 })
-                .eq('id', resposta.id); // Atualiza a resposta específica com base no ID
+                .eq('id', id); // Filtra pela ID da resposta que deve ser atualizada
 
-            if (answerError) {
-                throw answerError;
+            if (updateAnswerError) {
+                throw updateAnswerError;
             }
         }
 
-        res.status(200).json({
-            message: 'Pergunta e respostas atualizadas com sucesso!',
-            question: updatedQuestion,
-            respostas: respostasData,
-        });
+        res.status(200).json({ message: 'Pergunta e respostas atualizadas com sucesso!' });
     } catch (err) {
-        console.error('Erro ao editar pergunta e respostas:', err);
+        console.error('Erro ao atualizar pergunta e respostas:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
-
 
 
 // Endpoint para buscar perguntas e respostas TODAS
