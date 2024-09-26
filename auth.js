@@ -690,6 +690,64 @@ router.post('/createQuestion', async (req, res) => {
     }
 });
 
+// Endpoint para editar perguntas e respostas
+router.post('/editQuestion/:id', async (req, res) => {
+    const { id } = req.params; // Captura o ID da pergunta da URL
+    const { pergunta, corretaId, respostas } = req.body;
+
+    try {
+        // Atualizar a pergunta na tabela perguntas
+        const { data: updatedQuestion, error: questionError } = await supabase
+            .from('perguntas')
+            .update({
+                pergunta: pergunta,
+                resposta_correta: corretaId // Atualiza o ID da resposta correta
+            })
+            .eq('id', id) // Atualiza a pergunta específica com base no ID
+            .select('*')
+            .single(); // Obtém a pergunta atualizada
+
+        if (questionError) {
+            throw questionError;
+        }
+
+        // Verifique se a resposta correta existe dentro das respostas fornecidas
+        const respostaCorreta = respostas.find((resposta) => resposta.id === corretaId);
+        if (!respostaCorreta) {
+            return res.status(400).json({ message: 'A resposta correta fornecida não está presente nas respostas enviadas.' });
+        }
+
+        // Atualizar as respostas na tabela respostas
+        const respostasData = respostas.map((resposta) => ({
+            id: resposta.id, // O ID da resposta para atualização
+            resposta: resposta.texto, // Supondo que cada resposta tem um campo 'texto'
+            is_correta: resposta.id === corretaId, // Verifica se a resposta é a correta pelo id
+        }));
+
+        for (const resposta of respostasData) {
+            const { error: answerError } = await supabase
+                .from('respostas')
+                .update({
+                    resposta: resposta.resposta,
+                    is_correta: resposta.is_correta,
+                })
+                .eq('id', resposta.id); // Atualiza a resposta específica com base no ID
+
+            if (answerError) {
+                throw answerError;
+            }
+        }
+
+        res.status(200).json({
+            message: 'Pergunta e respostas atualizadas com sucesso!',
+            question: updatedQuestion,
+            respostas: respostasData,
+        });
+    } catch (err) {
+        console.error('Erro ao editar pergunta e respostas:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
 
 
 // Endpoint para buscar perguntas e respostas TODAS
