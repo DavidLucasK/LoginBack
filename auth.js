@@ -720,7 +720,7 @@ router.post('/editQuestion/:id', async (req, res) => {
         // Atualizar as respostas na tabela respostas
         const respostasData = respostas.map((resposta) => ({
             id: resposta.id, // O ID da resposta para atualização
-            resposta: resposta.texto, // Supondo que cada resposta tem um campo 'texto'
+            resposta: resposta.resposta, // Altere 'texto' para 'resposta' se o campo for 'resposta'
             is_correta: resposta.id === corretaId, // Verifica se a resposta é a correta pelo id
         }));
 
@@ -748,7 +748,6 @@ router.post('/editQuestion/:id', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
-
 
 // Endpoint para buscar perguntas e respostas TODAS
 router.get('/questionsAll/:partnerId', async (req, res) => {
