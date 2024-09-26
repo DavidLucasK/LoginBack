@@ -701,18 +701,12 @@ router.post('/editQuestion/:id', async (req, res) => {
             return res.status(400).json({ message: 'O índice da resposta correta deve estar entre 0 e 3.' });
         }
 
-        // Identifica a resposta correta com base no índice
-        const respostaCorreta = respostas[indiceCorreta];
-        if (!respostaCorreta) {
-            return res.status(400).json({ message: 'A resposta correta fornecida não está presente nas respostas enviadas.' });
-        }
-
         // Atualizar a pergunta na tabela perguntas
         const { data: updatedQuestion, error: questionError } = await supabase
             .from('perguntas')
             .update({
                 pergunta: pergunta,
-                resposta_correta: respostaCorreta.id // Atualiza o ID da resposta correta com base no índice
+                resposta_correta: indiceCorreta // Atualiza o índice da resposta correta
             })
             .eq('id', id) // Atualiza a pergunta específica com base no ID
             .select('*')
@@ -725,7 +719,7 @@ router.post('/editQuestion/:id', async (req, res) => {
         // Atualizar as respostas na tabela respostas
         const respostasData = respostas.map((resposta, index) => ({
             id: resposta.id, // O ID da resposta para atualização
-            resposta: resposta.resposta, // Altere 'texto' para 'resposta' se o campo for 'resposta'
+            resposta: resposta.resposta, // Altera 'texto' para 'resposta' se o campo for 'resposta'
             is_correta: index === indiceCorreta, // Verifica se a resposta é a correta pelo índice
         }));
 
@@ -753,6 +747,7 @@ router.post('/editQuestion/:id', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 
 // Endpoint para buscar perguntas e respostas TODAS
