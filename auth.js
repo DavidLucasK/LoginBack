@@ -610,7 +610,7 @@ router.get('/questionsAll:partnerId', async (req, res) => {
         }
 
         if (questions.length === 0) {
-            return res.status(404).json({ message: 'Nenhuma pergunta sem resposta encontrada para este partnerId' });
+            return res.status(404).json({ message: 'Nenhuma pergunta encontrada para este partnerId' });
         }
 
         res.status(200).json(questions);
