@@ -563,12 +563,17 @@ router.post('/update-points-test', async (req, res) => {
     }
 });
 
-// Endpoint para buscar perguntas e respostas aleatórias
-router.get('/questions', async (req, res) => {
+// Endpoint para buscar perguntas e respostas aleatórias com base no partnerId
+router.get('/questions/:partnerId', async (req, res) => {
+    const { partnerId } = req.params;
     try {
-        // Buscar 5 perguntas aleatórias usando a função RPC
+        // Buscar 5 perguntas aleatórias para o parceiro específico
         const { data: questions, error: questionsError } = await supabase
-            .rpc('get_random_questions', { p_limit: 7 });
+            .from('perguntas')
+            .select('id, pergunta') // selecione os campos necessários
+            .eq('partner_id', partnerId) // adiciona filtro pelo partnerId
+            .order('random()') // para obter aleatoriamente
+            .limit(7);
 
         if (questionsError) {
             throw questionsError;
