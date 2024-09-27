@@ -44,7 +44,7 @@ router.post('/insert-redemption/:userId', async (req, res) => {
 
         const { data: partnerData } = await supabase
             .from('profile_infos')
-            .select('email')
+            .select('*')
             .eq('id', partnerId)
             .single();
         
