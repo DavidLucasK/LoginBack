@@ -341,17 +341,15 @@ router.post('/forgot', async (req, res) => {
                     <p style="color: #666;">Você solicitou a redefinição de senha da sua conta.</p>
                     <p style="color: #666;">Clique no botão abaixo para redefinir sua senha:</p>
                     <div style="display: grid; align-items: center;">
-                        <a href="teamo://reset-password?token=${token}&email=${email}" style="background-color: #7b30d0; color: #F5F3F4; margin-bottom: 20px; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                            Redefinir Senha via App
-                        </a>
-                        <a href="${process.env.FRONTEND_URL}/reset.html?token=${token}&email=${email}" style="background-color: #7b30d0; color: #F5F3F4; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                            Redefinir Senha via Web
+                        <a href="${process.env.FRONTEND_URL}/redirect-to-app?token=${token}&email=${email}" style="background-color: #7b30d0; color: #F5F3F4; margin-bottom: 20px; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            Redefinir Senha
                         </a>
                     </div>
                     <p style="color: #999; margin-top: 20px;">Se você não solicitou esta alteração, por favor ignore este e-mail.</p>
                 </div>
             `
         };
+        
         
 
         transporter.sendMail(mailOptions, (err, info) => {
