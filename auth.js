@@ -783,8 +783,9 @@ router.get('/questionsAll/:partnerId', async (req, res) => {
             throw questionsError;
         }
 
-        if (questions.length === 0) {
-            return res.status(404).json({ message: 'Nenhuma pergunta encontrada para este partnerId' });
+        // Se não houver perguntas, retorna um array vazio ao invés de um erro 404
+        if (!questions || questions.length === 0) {
+            return res.status(203).json([]);  // Retorna um array vazio
         }
 
         res.status(200).json(questions);
