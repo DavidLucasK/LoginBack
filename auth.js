@@ -47,7 +47,8 @@ router.post('/insert-redemption/:userId', async (req, res) => {
             .select('email')
             .eq('id', partnerId)
             .single();
-
+        
+        const nameParner = partnerData.name;
         const emailPartner = partnerData.email;
 
         console.log('E-mail do destinatário:', emailPartner);
@@ -83,7 +84,7 @@ router.post('/insert-redemption/:userId', async (req, res) => {
             from: process.env.EMAIL,
             to: emailPartner,
             subject: 'Resgate na Loja!!',
-            text: `O usuario com id ${userId} resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
+            text: `O usuario ${nameParner} resgatou um item da loja: ${itemStore} e foram: ${pointsRequired} pontos`,
             html: `
                 <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
                     <h2 style="color: #333;">Resgate na Loja!!</h2>
