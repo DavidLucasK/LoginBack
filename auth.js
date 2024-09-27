@@ -567,13 +567,9 @@ router.post('/update-points-test', async (req, res) => {
 router.get('/questions/:partnerId', async (req, res) => {
     const { partnerId } = req.params;
     try {
-        // Buscar 5 perguntas aleatórias para o parceiro específico
+        // Buscar 7 perguntas aleatórias usando a função RPC com partnerId
         const { data: questions, error: questionsError } = await supabase
-            .from('perguntas')
-            .select('id, pergunta') // selecione os campos necessários
-            .eq('partner_id', partnerId) // adiciona filtro pelo partnerId
-            .order('random()') // para obter aleatoriamente
-            .limit(7);
+            .rpc('get_random_questions', { p_limit: 7, p_partner_id: partnerId });
 
         if (questionsError) {
             throw questionsError;
@@ -587,7 +583,7 @@ router.get('/questions/:partnerId', async (req, res) => {
         const questionIds = questions.map(question => question.id);
         const { data: answers, error: answersError } = await supabase
             .from('respostas')
-            .select('id, pergunta_id, resposta, is_correta')  // Qualificar colunas explicitamente
+            .select('id, pergunta_id, resposta, is_correta')  // Selecionar campos explicitamente
             .in('pergunta_id', questionIds); // Filtra as respostas pelas perguntas selecionadas
 
         if (answersError) {
@@ -606,6 +602,7 @@ router.get('/questions/:partnerId', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 // Endpoint para buscar perguntas e respostas com id da pergunta
 router.get('/questionSingle/:idPergunta', async (req, res) => {
