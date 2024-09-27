@@ -27,13 +27,13 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-//Grava o resgate feito pelo usuário na tabela resgates
+// Grava o resgate feito pelo usuário na tabela resgates
 router.post('/insert-redemption/:userId', async (req, res) => {
-    const {rewardId, pointsRequired, partnerEmail } = req.body;
+    const { rewardId, pointsRequired, partnerEmail } = req.body;
     const { userId } = req.params;
 
     try {
-        //Buscando o nome do item
+        // Buscando o nome do item
         const { data: storeData, error: storeError } = await supabase
             .from('store')
             .select('name')
@@ -57,9 +57,13 @@ router.post('/insert-redemption/:userId', async (req, res) => {
 
         const emailAdress = partnerEmail;
 
+        if (!emailAdress || typeof emailAdress !== 'string' || !emailAdress.includes('@')) {
+            return res.status(400).json({ message: 'E-mail do destinatário inválido!' });
+        }
+
         const mailOptions = {
             from: process.env.EMAIL,
-            to: `${emailAdress}`,
+            to: emailAdress,
             subject: 'Resgate na Loja!!',
             text: `O usuario com id ${userId} resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
             html: `
@@ -69,7 +73,7 @@ router.post('/insert-redemption/:userId', async (req, res) => {
                     <p style="color: #666;">Clique abaixo para ver o resgate na loja da Supabase</p>
                     <a href="https://supabase.com/dashboard/project/ojxyfmbpzjypidukzlqf/editor/30141" style="background-color: #bd11a8; color: #F5F3F4; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Resgate da Ma</a>
                 </div>
-                `
+            `
         };
 
         transporter.sendMail(mailOptions, (err, info) => {
@@ -78,16 +82,16 @@ router.post('/insert-redemption/:userId', async (req, res) => {
                 return res.status(500).json({ message: 'Erro ao enviar e-mail!' });
             } else {
                 console.log('E-mail enviado:', info.response);
-                return res.status(200).json({ message: 'E-mail enviado com sucesso!' });
+                return res.status(200).json({ message: 'Resgate registrado com sucesso e e-mail enviado!' });
             }
         });
 
-        res.status(200).json({ message: 'Resgate registrado com sucesso!' });
     } catch (err) {
         console.error('Erro ao registrar resgate:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 router.post('/insert-redemption-test', async (req, res) => {
     const { rewardId, pointsRequired } = req.body;
