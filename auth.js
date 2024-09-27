@@ -29,7 +29,7 @@ const transporter = nodemailer.createTransport({
 
 //Grava o resgate feito pelo usuário na tabela resgates
 router.post('/insert-redemption/:userId', async (req, res) => {
-    const {rewardId, pointsRequired, userEmail } = req.body;
+    const {rewardId, pointsRequired, partnerEmail } = req.body;
     const { userId } = req.params;
 
     try {
@@ -56,7 +56,7 @@ router.post('/insert-redemption/:userId', async (req, res) => {
         }
         const mailOptions = {
             from: process.env.EMAIL,
-            to: userEmail,
+            to: partnerEmail,
             subject: 'Resgate na Loja!!',
             text: `O usuario com id ${userId} resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
             html: `
@@ -448,12 +448,13 @@ router.get('/points/:userId', async (req, res) => {
             return res.status(404).json({ message: 'Usuário não encontrado' });
         }
 
-        res.status(200).json({ points: userPoints.points });
+        return res.status(200).json({ points: userPoints.points }); // Adicione um return aqui
     } catch (err) {
         console.error('Erro ao buscar pontos:', err);
-        res.status(500).json({ message: 'Erro no servidor' });
+        return res.status(500).json({ message: 'Erro no servidor' }); // Adicione um return aqui também
     }
 });
+
 
 router.get('/points-test', async (req, res) => {
     try {
