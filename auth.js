@@ -54,9 +54,12 @@ router.post('/insert-redemption/:userId', async (req, res) => {
         if (error) {
             throw error;
         }
+
+        const emailAdress = partnerEmail;
+
         const mailOptions = {
             from: process.env.EMAIL,
-            to: partnerEmail,
+            to: `${emailAdress}`,
             subject: 'Resgate na Loja!!',
             text: `O usuario com id ${userId} resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
             html: `
