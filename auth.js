@@ -57,10 +57,6 @@ router.post('/insert-redemption/:userId', async (req, res) => {
 
         const emailAdress = partnerEmail;
 
-        if (!emailAdress || typeof emailAdress !== 'string' || !emailAdress.includes('@')) {
-            return res.status(400).json({ message: 'E-mail do destinatário inválido!' });
-        }
-
         const mailOptions = {
             from: process.env.EMAIL,
             to: emailAdress,
