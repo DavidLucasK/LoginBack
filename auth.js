@@ -340,7 +340,7 @@ router.post('/forgot', async (req, res) => {
                     <h2 style="color: #333;">Redefinição de Senha</h2>
                     <p style="color: #666;">Você solicitou a redefinição de senha da sua conta.</p>
                     <p style="color: #666;">Clique no botão abaixo para redefinir sua senha:</p>
-                    <a href="${process.env.FRONTEND_URL}/reset.html?token=${token}&email=${email}" style="background-color: #7b30d0; color: #F5F3F4; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Redefinir Senha</a>
+                    <a href="teamo://reset-password?token=${token}&email=${email}" style="background-color: #7b30d0; color: #F5F3F4; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Redefinir Senha</a>
                     <p style="color: #999; margin-top: 20px;">Se você não solicitou esta alteração, por favor ignore este e-mail.</p>
                 </div>
                 `
