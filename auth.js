@@ -29,15 +29,31 @@ const transporter = nodemailer.createTransport({
 
 // Grava o resgate feito pelo usuário na tabela resgates
 router.post('/insert-redemption/:userId', async (req, res) => {
-    const { rewardId, pointsRequired, partnerEmail } = req.body;
+    const { rewardId, pointsRequired } = req.body;
     const { userId } = req.params;
 
     try {
         // Log para depuração
-        console.log('E-mail do destinatário:', partnerEmail);
+        const { data: userData } = await supabase
+            .from('profile_infos')
+            .select('partner')
+            .eq('id', userId)
+            .single();
+
+        const partnerId = userData.partner;
+
+        const { data: partnerData } = await supabase
+            .from('profile_infos')
+            .select('email')
+            .eq('id', partnerId)
+            .single();
+
+        const emailPartner = partnerData.email;
+
+        console.log('E-mail do destinatário:', emailPartner);
 
         // Verifica se o e-mail é válido
-        if (!partnerEmail || typeof partnerEmail !== 'string' || !partnerEmail.includes('@')) {
+        if (!emailPartner || typeof emailPartner !== 'string' || !emailPartner.includes('@')) {
             return res.status(400).json({ message: 'E-mail do destinatário inválido!' });
         }
 
@@ -65,7 +81,7 @@ router.post('/insert-redemption/:userId', async (req, res) => {
 
         const mailOptions = {
             from: process.env.EMAIL,
-            to: partnerEmail,
+            to: emailPartner,
             subject: 'Resgate na Loja!!',
             text: `O usuario com id ${userId} resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
             html: `
