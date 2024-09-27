@@ -574,9 +574,9 @@ router.get('/questions/:partnerId', async (req, res) => {
     }
 
     try {
-        // Buscar 7 perguntas aleatórias usando a função RPC com partnerId
+        // Buscar 7 perguntas aleatórias usando a nova função RPC com partnerId
         const { data: questions, error: questionsError } = await supabase
-            .rpc('get_random_questions', { p_limit: 7, p_partner_id: partnerIdNumber });
+            .rpc('get_random_questions_by_partner', { p_limit: 7, p_partner_id: partnerIdNumber });
 
         if (questionsError) {
             throw questionsError;
