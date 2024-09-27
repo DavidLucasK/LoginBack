@@ -33,6 +33,14 @@ router.post('/insert-redemption/:userId', async (req, res) => {
     const { userId } = req.params;
 
     try {
+        // Log para depuração
+        console.log('E-mail do destinatário:', partnerEmail);
+
+        // Verifica se o e-mail é válido
+        if (!partnerEmail || typeof partnerEmail !== 'string' || !partnerEmail.includes('@')) {
+            return res.status(400).json({ message: 'E-mail do destinatário inválido!' });
+        }
+
         // Buscando o nome do item
         const { data: storeData, error: storeError } = await supabase
             .from('store')
@@ -55,11 +63,9 @@ router.post('/insert-redemption/:userId', async (req, res) => {
             throw error;
         }
 
-        const emailAdress = partnerEmail;
-
         const mailOptions = {
             from: process.env.EMAIL,
-            to: emailAdress,
+            to: partnerEmail,
             subject: 'Resgate na Loja!!',
             text: `O usuario com id ${userId} resgatou um item da loja: ${rewardId} e foram: ${pointsRequired} pontos`,
             html: `
@@ -71,6 +77,9 @@ router.post('/insert-redemption/:userId', async (req, res) => {
                 </div>
             `
         };
+
+        // Log para depuração
+        console.log('Mail Options:', mailOptions);
 
         transporter.sendMail(mailOptions, (err, info) => {
             if (err) {
