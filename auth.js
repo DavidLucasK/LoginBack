@@ -566,10 +566,17 @@ router.post('/update-points-test', async (req, res) => {
 // Endpoint para buscar perguntas e respostas aleatórias com base no partnerId
 router.get('/questions/:partnerId', async (req, res) => {
     const { partnerId } = req.params;
+
+    // Verificar se o partnerId é um número válido
+    const partnerIdNumber = parseInt(partnerId, 10);
+    if (isNaN(partnerIdNumber)) {
+        return res.status(400).json({ message: 'ID de parceiro inválido. Certifique-se de fornecer um número válido.' });
+    }
+
     try {
         // Buscar 7 perguntas aleatórias usando a função RPC com partnerId
         const { data: questions, error: questionsError } = await supabase
-            .rpc('get_random_questions', { p_limit: 7, p_partner_id: partnerId });
+            .rpc('get_random_questions', { p_limit: 7, p_partner_id: partnerIdNumber });
 
         if (questionsError) {
             throw questionsError;
@@ -602,7 +609,6 @@ router.get('/questions/:partnerId', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
-
 
 // Endpoint para buscar perguntas e respostas com id da pergunta
 router.get('/questionSingle/:idPergunta', async (req, res) => {
