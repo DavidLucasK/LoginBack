@@ -567,16 +567,10 @@ router.post('/update-points-test', async (req, res) => {
 router.get('/questions/:partnerId', async (req, res) => {
     const { partnerId } = req.params;
 
-    // Verificar se o partnerId é um número válido
-    const partnerIdNumber = parseInt(partnerId, 10);
-    if (isNaN(partnerIdNumber)) {
-        return res.status(400).json({ message: 'ID de parceiro inválido. Certifique-se de fornecer um número válido.' });
-    }
-
     try {
         // Buscar 7 perguntas aleatórias usando a nova função RPC com partnerId
         const { data: questions, error: questionsError } = await supabase
-            .rpc('get_random_questions_by_partner', { p_limit: 7, p_partner_id: partnerIdNumber });
+            .rpc('get_random_questions_by_partner', { p_limit: 7, p_partner_id: partnerId });
 
         if (questionsError) {
             throw questionsError;
