@@ -644,7 +644,7 @@ router.get('/questionSingle/:idPergunta', async (req, res) => {
 
 // Endpoint para criar perguntas e respostas
 router.post('/createQuestion', async (req, res) => {
-    const { pergunta, corretaId, partnerId, respostas } = req.body;
+    const { pergunta, indiceCorreta, partnerId, respostas } = req.body;
 
     try {
         // Inserir a nova pergunta na tabela perguntas
@@ -653,7 +653,7 @@ router.post('/createQuestion', async (req, res) => {
             .insert([
                 {
                     pergunta: pergunta,
-                    resposta_correta: corretaId, // O ID da resposta correta
+                    resposta_correta: indiceCorreta, // O ID da resposta correta
                     partner_id: partnerId
                 }
             ])
@@ -665,7 +665,7 @@ router.post('/createQuestion', async (req, res) => {
         }
 
         // Verifique se a resposta correta existe dentro das respostas fornecidas
-        const respostaCorreta = respostas.find((resposta) => resposta.id === corretaId);
+        const respostaCorreta = respostas.find((resposta) => resposta.id === indiceCorreta);
         if (!respostaCorreta) {
             return res.status(400).json({ message: 'A resposta correta fornecida não está presente nas respostas enviadas.' });
         }
@@ -674,7 +674,7 @@ router.post('/createQuestion', async (req, res) => {
         const respostasData = respostas.map((resposta) => ({
             pergunta_id: newQuestion.id, // Referencia o ID da nova pergunta
             resposta: resposta.texto, // Supondo que cada resposta tem um campo 'texto'
-            is_correta: resposta.id === corretaId, // Verifica se a resposta é a correta pelo id
+            is_correta: resposta.id === indiceCorreta, // Verifica se a resposta é a correta pelo id
         }));
 
         const { error: answersError } = await supabase
