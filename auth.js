@@ -89,7 +89,7 @@ router.post('/insert-redemption/:userId', async (req, res) => {
             html: `
                 <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
                     <h2 style="color: #333; display: block;">Resgate na Loja!!</h2>
-                    <span style="color: #666; display: block;">O usuário ${nameParner} resgatou um item da loja: ${itemStore} e foram: ${pointsRequired} pontos</span>
+                    <span style="color: #666; font-size: 20pt; font display: block;">O usuário ${nameParner} resgatou um item da loja: ${itemStore} e foram: ${pointsRequired} pontos</span>
                     <img src="${imageUrl}" style="display: block; margin: 0 auto;" />
                 </div>
             `
