@@ -1239,34 +1239,48 @@ router.post('/update-profile/:userId', async (req, res) => {
     }
 });
 
-
+//Pega informações adicionais do usuário.
 router.get('/get-profile/:userId', async (req, res) => {
     const { userId } = req.params;
 
     try {
         // Busca os dados na tabela profile_infos com base no userId
-        const { data, error } = await supabase
+        const { data: profileData, error: profileError } = await supabase
             .from('profile_infos')
             .select('*')
             .eq('id', userId)
             .single();
 
-        const {email} = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', userId)
-            .single();
-        
-        if (!data || email) {
-            return res.status(201).json(email);
+        // Se não houver dados na tabela profile_infos ou ocorrer um erro, busca o email na tabela users
+        if (!profileData || profileError) {
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('email')
+                .eq('id', userId)
+                .single();
+            
+            // Se houver erro ao buscar na tabela users, retorna erro ao cliente
+            if (userError) {
+                return res.status(500).json({ message: 'Erro ao buscar email do usuário' });
+            }
+            
+            // Se encontrar o email, retorna o email
+            if (userData) {
+                return res.status(200).json({ email: userData.email });
+            }
+            
+            // Caso não encontre o userId na tabela users
+            return res.status(404).json({ message: 'Usuário não encontrado' });
         }
 
-        res.status(200).json(data);
+        // Se encontrou dados na tabela profile_infos, retorna esses dados
+        res.status(200).json(profileData);
     } catch (err) {
         console.error('Erro ao buscar perfil:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 router.post('/like', async (req, res) => {
     try {
