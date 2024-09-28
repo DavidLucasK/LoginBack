@@ -1044,7 +1044,8 @@ router.delete('/delete_item/:itemId', async (req, res) => {
 
 
 //Posts com comentarios
-router.get('/posts', async (req, res) => {
+router.get('/posts/:userId&partnerId', async (req, res) => {
+    const {userId, partnerId} = req.params;
     try {
         // Capturar query params: page, limit, search, sortBy, userId, partnerId
         const page = req.query.page ? parseInt(req.query.page, 10) : 1;
@@ -1052,9 +1053,6 @@ router.get('/posts', async (req, res) => {
         const offset = (page - 1) * limit;
         const search = req.query.search || '';
         const sortBy = req.query.sortBy || 'data'; // Ordena por data de criação por padrão
-
-        // Capturar userId e partnerId dos query params
-        const { userId, partnerId } = req.query;
 
         if (!userId || !partnerId) {
             return res.status(400).json({ message: 'Parâmetros userId e partnerId são obrigatórios' });
