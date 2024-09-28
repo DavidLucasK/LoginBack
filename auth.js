@@ -1046,17 +1046,42 @@ router.delete('/delete_item/:itemId', async (req, res) => {
 //Posts com comentarios
 router.get('/posts', async (req, res) => {
     try {
-        // Capturar query params: page, limit, search, sortBy
+        // Capturar query params: page, limit, search, sortBy, userId, partnerId
         const page = req.query.page ? parseInt(req.query.page, 10) : 1;
         const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
         const offset = (page - 1) * limit;
         const search = req.query.search || '';
         const sortBy = req.query.sortBy || 'data'; // Ordena por data de criação por padrão
 
-        // Fazer a busca na tabela de 'posts' com paginação, filtros e ordenação
+        // Capturar userId e partnerId dos query params
+        const { userId, partnerId } = req.query;
+
+        if (!userId || !partnerId) {
+            return res.status(400).json({ message: 'Parâmetros userId e partnerId são obrigatórios' });
+        }
+
+        // Buscar os nomes correspondentes aos userId e partnerId na tabela profile_infos
+        const { data: profiles, error: profileError } = await supabase
+            .from('profile_infos')
+            .select('name')
+            .in('id', [userId, partnerId]); // Filtrar por userId e partnerId
+
+        if (profileError) {
+            throw profileError;
+        }
+
+        if (profiles.length !== 2) {
+            return res.status(404).json({ message: 'Usuários não encontrados' });
+        }
+
+        // Extrair os nomes para filtrar os posts
+        const usernamesToFilter = profiles.map(profile => profile.name);
+
+        // Fazer a busca na tabela de 'posts' com paginação, filtros e ordenação, e filtrar pelos usernames
         const { data: posts, error: postsError } = await supabase
             .from('posts')
             .select('*') // Selecione apenas os campos necessários
+            .in('username', usernamesToFilter) // Filtrar posts pelos usernames correspondentes
             .order(sortBy, { ascending: false }) // Ordena os resultados
             .range(offset, offset + limit - 1); // Paginação
 
@@ -1067,7 +1092,8 @@ router.get('/posts', async (req, res) => {
         // Contagem total de posts para controle de páginas no frontend
         const { count } = await supabase
             .from('posts')
-            .select('id', { count: 'exact' });
+            .select('id', { count: 'exact' })
+            .in('username', usernamesToFilter); // Filtrar a contagem pelos mesmos usernames
 
         // Log para verificar os posts retornados
         console.log('Posts:', posts);
@@ -1121,6 +1147,7 @@ router.get('/posts', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 router.get('/post/:id', async (req, res) => {
     try {
