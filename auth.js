@@ -1044,7 +1044,7 @@ router.delete('/delete_item/:itemId', async (req, res) => {
 
 
 //Posts com comentarios
-router.get('/posts/:userId&partnerId', async (req, res) => {
+router.get('/posts/:userId/:partnerId', async (req, res) => {
     const {userId, partnerId} = req.params;
     try {
         // Capturar query params: page, limit, search, sortBy, userId, partnerId
