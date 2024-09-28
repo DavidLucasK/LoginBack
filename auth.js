@@ -1363,6 +1363,14 @@ router.post('/comment/:userId', async (req, res) => {
         now.setHours(now.getHours() - 3); // Subtrai 3 horas
         const adjustedDate = now.toISOString();
 
+        const { data: userData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        const userName = userData.name;
+
         // Inserir o novo comentário na tabela 'comments'
         const { data, error } = await supabase
             .from('comments')
@@ -1371,7 +1379,7 @@ router.post('/comment/:userId', async (req, res) => {
                     id_post: id_post,
                     comment_text: comment_text,
                     created_at: adjustedDate,
-                    username: userId,
+                    username: userName,
                     // Você pode adicionar mais campos aqui, como a data do comentário, se necessário
                 }
             ]);
