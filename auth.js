@@ -1363,11 +1363,15 @@ router.post('/comment/:userId', async (req, res) => {
         now.setHours(now.getHours() - 3); // Subtrai 3 horas
         const adjustedDate = now.toISOString();
 
-        const { data: userData } = await supabase
-            .from('profile_info')
-            .select('*')
+        const { data: userData, error: userError } = await supabase
+            .from('profile_infos') 
+            .select('name')
             .eq('id', userId)
             .single();
+
+        if (userError || !userData) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
 
         const userName = userData.name;
 
