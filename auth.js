@@ -1251,10 +1251,6 @@ router.get('/get-profile/:userId', async (req, res) => {
             .eq('id', userId)
             .single();
 
-        if (error) {
-            throw error;
-        }
-
         if (!data) {
             return res.status(201).json({ message: 'Perfil não encontrado. Atualize as informações' });
         }
