@@ -1251,7 +1251,7 @@ router.post('/update-profile/:userId', async (req, res) => {
             // Inserir informações na tabela status_quiz com o userId
             const { error: quizError } = await supabase
                 .from('status_quiz')
-                .insert([{ id: userId, username: name, data_ultimo_quiz: new Date(), is_completed: FALSE }]); // Define o status inicial do quiz
+                .insert([{ id: userId, username: name, data_ultimo_quiz: new Date(), is_completed: false }]); // Define o status inicial do quiz
 
             if (quizError) {
                 throw quizError;
