@@ -1266,7 +1266,7 @@ router.get('/get-profile/:userId', async (req, res) => {
             
             // Se encontrar o email, retorna o email
             if (userData) {
-                return res.status(200).json({ email: userData.email });
+                return res.status(201).json({ email: userData.email });
             }
             
             // Caso não encontre o userId na tabela users
