@@ -1364,7 +1364,7 @@ router.post('/comment/:userId', async (req, res) => {
         const adjustedDate = now.toISOString();
 
         const { data: userData } = await supabase
-            .from('users')
+            .from('profile_info')
             .select('*')
             .eq('id', userId)
             .single();
