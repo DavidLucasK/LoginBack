@@ -1251,8 +1251,14 @@ router.get('/get-profile/:userId', async (req, res) => {
             .eq('id', userId)
             .single();
 
-        if (!data) {
-            return res.status(201).json({ message: 'Perfil não encontrado. Atualize as informações' });
+        const {email} = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        
+        if (!data || email) {
+            return res.status(201).json(email);
         }
 
         res.status(200).json(data);
