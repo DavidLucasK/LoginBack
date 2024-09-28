@@ -1211,10 +1211,9 @@ router.post('/upload_post', async (req, res) => {
     }
 });
 
-// Endpoint para inserir ou atualizar informações do perfil
 router.post('/update-profile/:userId', async (req, res) => {
     const { name, email, phone, profileImage } = req.body;
-    const { userId } = req.params
+    const { userId } = req.params;
 
     // Verifica se todos os campos necessários estão presentes
     if (!name || !email || !phone) {
@@ -1222,11 +1221,50 @@ router.post('/update-profile/:userId', async (req, res) => {
     }
 
     try {
-        // Atualiza ou insere os dados na tabela profile_infos para o userId especificado
+        // Verifica se existe uma linha na tabela profile_infos com o userId especificado
+        const { data: existingProfile, error: profileError } = await supabase
+            .from('profile_infos')
+            .select('id')
+            .eq('id', userId)
+            .single();
+
+        // Se houver erro na consulta ou nenhum perfil for encontrado, inserimos um novo
+        if (profileError || !existingProfile) {
+            // Insere um novo perfil na tabela profile_infos
+            const { data: newProfile, error: insertError } = await supabase
+                .from('profile_infos')
+                .insert([{ id: userId, name, email, phone, profile_image: profileImage }]);
+
+            if (insertError) {
+                throw insertError;
+            }
+
+            // Inserir informações na tabela user_points com o userId
+            const { error: pointsError } = await supabase
+                .from('user_points')
+                .insert([{ id: userId, username: name, points: 0, last_updated: new Date()}]); // Inicializa os pontos com 0 ou outro valor padrão
+
+            if (pointsError) {
+                throw pointsError;
+            }
+
+            // Inserir informações na tabela status_quiz com o userId
+            const { error: quizError } = await supabase
+                .from('status_quiz')
+                .insert([{ id: userId, username: name, data_ultimo_quiz: new Date(), is_completed: FALSE }]); // Define o status inicial do quiz
+
+            if (quizError) {
+                throw quizError;
+            }
+
+            return res.status(201).json({ message: 'Perfil criado com sucesso!', data: newProfile });
+        }
+
+        // Se o perfil já existir, atualiza os dados na tabela profile_infos
         const { data, error } = await supabase
             .from('profile_infos')
-            .update([{ name, email, phone, profile_image: profileImage }])
-            .eq ('id', userId);
+            .update({ name, email, phone, profile_image: profileImage })
+            .eq('id', userId);
 
         if (error) {
             throw error;
@@ -1238,6 +1276,7 @@ router.post('/update-profile/:userId', async (req, res) => {
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 //Pega informações adicionais do usuário.
 router.get('/get-profile/:userId', async (req, res) => {
