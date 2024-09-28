@@ -1349,10 +1349,11 @@ router.post('/like', async (req, res) => {
 });
 
 // Endpoint para adicionar um comentário
-router.post('/comment', async (req, res) => {
+router.post('/comment/:userId', async (req, res) => {
+    const { userId } = req.params;
     try {
         // Capturar o corpo da requisição: id_post e comment_text
-        const { id_post, comment_text, username } = req.body;
+        const { id_post, comment_text } = req.body;
 
         if (!id_post || !comment_text || typeof comment_text !== 'string') {
             return res.status(400).json({ message: 'Invalid data' });
@@ -1370,7 +1371,7 @@ router.post('/comment', async (req, res) => {
                     id_post: id_post,
                     comment_text: comment_text,
                     created_at: adjustedDate,
-                    username: username,
+                    username: userId,
                     // Você pode adicionar mais campos aqui, como a data do comentário, se necessário
                 }
             ]);
