@@ -1346,7 +1346,7 @@ router.get('/get-profile/:userId', async (req, res) => {
 });
 
 //Pega informações do perfil através do userName
-router.get('/get-profile/:userName', async (req, res) => {
+router.get('/get_profile_username/:userName', async (req, res) => {
     const { userName } = req.params;
 
     try {
