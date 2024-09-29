@@ -1303,7 +1303,7 @@ router.post('/update-profile/:userId', async (req, res) => {
 });
 
 
-//Pega informações adicionais do usuário.
+//Pega informações adicionais do usuário pelo userId.
 router.get('/get-profile/:userId', async (req, res) => {
     const { userId } = req.params;
 
@@ -1339,6 +1339,33 @@ router.get('/get-profile/:userId', async (req, res) => {
 
         // Se encontrou dados na tabela profile_infos, retorna esses dados
         res.status(200).json(profileData);
+    } catch (err) {
+        console.error('Erro ao buscar perfil:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+//Pega informações do perfil através do userName
+router.get('/get-profile/:userName', async (req, res) => {
+    const { userName } = req.params;
+
+    try {
+        // Busca os dados na tabela profile_infos com base no userId
+        const { data, error } = await supabase
+            .from('profile_infos')
+            .select('*')
+            .eq('name', userName)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data) {
+            return res.status(404).json({ message: 'Perfil não encontrado.' });
+        }
+
+        res.status(200).json(data);
     } catch (err) {
         console.error('Erro ao buscar perfil:', err);
         res.status(500).json({ message: 'Erro no servidor' });
