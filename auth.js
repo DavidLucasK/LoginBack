@@ -1350,11 +1350,11 @@ router.get('/get_profile_username/:userName', async (req, res) => {
     const { userName } = req.params;
 
     try {
-        // Busca os dados na tabela user_points com base no userId
+        // Busca os dados na tabela profile_infos com base no userId
         const { data, error } = await supabase
-            .from('user_points')
+            .from('profile_infos')
             .select('*')
-            .eq('username', userName)
+            .eq('name', userName)
             .single();
 
         if (error) {
