@@ -1476,7 +1476,6 @@ router.post('/handle_invite/:userId', async (req, res) => {
       .from('invites')
       .select('*')
       .eq('id_invite', inviteId)
-      .single();
 
     if (inviteError) {
       console.error('Erro ao consultar o invite:', inviteError);
