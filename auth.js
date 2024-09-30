@@ -1408,12 +1408,54 @@ router.post('/inviting/:userId/:partnerId', async (req, res) => {
             return res.status(404).json({ message: 'Invite não enviado' });
         }
 
-        res.status(200).json({ message: 'Invite enviado com sucesso', inviteData, profileData });
+        res.status(200).json({ message: 'Invite enviado com sucesso' });
     } catch (err) {
         console.error('Erro ao enviar invite:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
+// Invites para o userId
+router.get('/get_invites/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        // Buscar todos os invites onde id_partner é igual ao userId
+        const { data: invitesData, error: invitesError } = await supabase
+            .from('invites')
+            .select('id_user_invite') // Seleciona apenas o id_user_invite
+            .eq('id_partner', userId);
+
+        if (invitesError) {
+            return res.status(404).json({ message: 'Erro ao buscar informações dos invites' });
+        }
+
+        // Se não houver invites, retornar uma mensagem apropriada
+        if (!invitesData || invitesData.length === 0) {
+            return res.status(201).json({ message: 'Nenhum invite encontrado' });
+        }
+
+        // Extrair todos os id_user_invite
+        const userInviteIds = invitesData.map(invite => invite.id_user_invite);
+
+        // Fazer um select na tabela profile_infos com os ids dos invites
+        const { data: profilesData, error: profilesError } = await supabase
+            .from('profile_infos')
+            .select('*')
+            .in('id', userInviteIds); // Usa a cláusula IN para buscar múltiplos ids
+
+        if (profilesError) {
+            return res.status(404).json({ message: 'Erro ao buscar informações dos perfis' });
+        }
+
+        // Retornar todos os dados dos perfis
+        res.status(200).json({ message: 'Dados dos invites e perfis encontrados', profilesData });
+    } catch (err) {
+        console.error('Erro ao buscar invites:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 
 router.post('/like', async (req, res) => {
     try {
