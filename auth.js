@@ -1461,10 +1461,14 @@ router.post('/handle_invite/:userId', async (req, res) => {
   const { userId } = req.params;
   const { inviteId, option } = req.body;
 
-    // Verifica se o inviteId existe e é um número inteiro válido
-    if (!inviteId || isNaN(inviteId) || !Number.isInteger(Number(inviteId))) {
-        return res.status(400).json({ message: 'ID de convite inválido.' });
-    }
+  // Verifica se inviteId e option foram fornecidos e são válidos
+  if (!inviteId || isNaN(inviteId) || !Number.isInteger(Number(inviteId))) {
+    return res.status(400).json({ message: 'ID de convite inválido.' });
+  }
+
+  if (option !== 1 && option !== 2) {
+    return res.status(400).json({ message: 'Opção inválida.' });
+  }
 
   try {
     // Verifica se o invite existe
@@ -1474,7 +1478,12 @@ router.post('/handle_invite/:userId', async (req, res) => {
       .eq('id_invite', inviteId)
       .single();
 
-    if (inviteError || !inviteData) {
+    if (inviteError) {
+      console.error('Erro ao consultar o invite:', inviteError);
+      return res.status(500).json({ message: 'Erro ao consultar o convite.' });
+    }
+
+    if (!inviteData) {
       return res.status(404).json({ message: 'Convite não encontrado.', inviteId });
     }
 
@@ -1489,22 +1498,20 @@ router.post('/handle_invite/:userId', async (req, res) => {
     });
 
     if (transactionError) {
+      console.error('Erro ao executar a transação:', transactionError);
       return res.status(500).json({ message: 'Erro ao processar a solicitação.' });
     }
 
-    if (option == 1) {
+    if (option === 1) {
       res.status(200).json({ message: 'Solicitação aceita com sucesso.' });
-    } else if (option == 2) {
+    } else if (option === 2) {
       res.status(200).json({ message: 'Solicitação recusada com sucesso.' });
-    } else {
-      res.status(400).json({ message: 'Opção inválida.' });
     }
   } catch (error) {
     console.error('Erro ao lidar com a solicitação de convite:', error);
     res.status(500).json({ message: 'Erro no servidor.' });
   }
 });
-
 
 router.post('/like', async (req, res) => {
     try {
