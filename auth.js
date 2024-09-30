@@ -1463,10 +1463,12 @@ router.post('/handle_invite/:userId', async (req, res) => {
 
   // Verifica se inviteId e option foram fornecidos e são válidos
   if (!inviteId || isNaN(inviteId) || !Number.isInteger(Number(inviteId))) {
+    console.error('Erro idINvite invalido:');
     return res.status(400).json({ message: 'ID de convite inválido.' });
   }
 
   if (option !== 1 && option !== 2) {
+    console.error('opção invalida');
     return res.status(400).json({ message: 'Opção inválida.' });
   }
 
@@ -1491,6 +1493,7 @@ router.post('/handle_invite/:userId', async (req, res) => {
     console.log('Dados do convite encontrados:', inviteData);
 
     if (!inviteData) {
+    console.error('convite não encontrado');
       return res.status(404).json({ message: 'Convite não encontrado.', inviteId });
     }
 
@@ -1520,7 +1523,6 @@ router.post('/handle_invite/:userId', async (req, res) => {
     res.status(500).json({ message: 'Erro no servidor.' });
   }
 });
-
 
 router.post('/like', async (req, res) => {
     try {
