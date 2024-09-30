@@ -1357,10 +1357,6 @@ router.get('/get_profile_username/:userName', async (req, res) => {
             .eq('name', userName)
             .single();
 
-        if (error) {
-            throw error;
-        }
-
         if (!data) {
             return res.status(404).json({ message: 'Perfil não encontrado.' });
         }
