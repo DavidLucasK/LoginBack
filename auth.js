@@ -1461,9 +1461,9 @@ router.post('/handle_invite/:userId', async (req, res) => {
   const { userId } = req.params;
   const { inviteId, option } = req.body;
 
-  // Verifica se o inviteId existe e é um número inteiro válido
+    // Verifica se o inviteId existe e é um número inteiro válido
     if (!inviteId || isNaN(inviteId) || !Number.isInteger(Number(inviteId))) {
-    return res.status(400).json({ message: 'ID de convite inválido.' });
+        return res.status(400).json({ message: 'ID de convite inválido.' });
     }
 
   try {
@@ -1475,7 +1475,7 @@ router.post('/handle_invite/:userId', async (req, res) => {
       .single();
 
     if (inviteError || !inviteData) {
-      return res.status(404).json({ message: 'Convite não encontrado.' });
+      return res.status(404).json({ message: 'Convite não encontrado.', inviteId });
     }
 
     const partnerInvite = inviteData.id_user_invite;
