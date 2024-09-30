@@ -1345,32 +1345,36 @@ router.get('/get-profile/:userId', async (req, res) => {
     }
 });
 
-//Pega informações do perfil através do userName
+// Pega informações do perfil através do userName
 router.get('/get_profile_username/:userName', async (req, res) => {
     const { userName } = req.params;
 
     try {
-        // Busca os dados na tabela profile_infos com base no userId
+        // Busca os dados na tabela profile_infos com base no userName
         const { data, error } = await supabase
             .from('profile_infos')
             .select('*')
-            .eq('name', userName)
-            .single();
+            .eq('name', userName);
 
         if (error) {
             throw error;
         }
 
-        if (!data) {
-            return res.status(404).json({ message: 'Perfil não encontrado.' });
+        // Verifica se nenhum dado foi retornado
+        if (!data || data.length === 0) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
         }
 
-        res.status(200).json(data);
+        // Como estamos esperando um único perfil, pegue o primeiro item do array
+        const profile = data[0];
+
+        res.status(200).json(profile);
     } catch (err) {
         console.error('Erro ao buscar perfil:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 
 router.post('/like', async (req, res) => {
