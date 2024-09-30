@@ -1471,6 +1471,9 @@ router.post('/handle_invite/:userId', async (req, res) => {
   }
 
   try {
+    // Log do inviteId para verificar se está correto
+    console.log('Buscando convite com ID:', inviteId);
+
     // Verifica se o invite existe
     const { data: inviteData, error: inviteError } = await supabase
       .from('invites')
@@ -1478,10 +1481,14 @@ router.post('/handle_invite/:userId', async (req, res) => {
       .eq('id_invite', inviteId)
       .single(); // Use single() para garantir que só um registro é retornado
 
+    // Verifique o erro e os dados retornados
     if (inviteError) {
       console.error('Erro ao consultar o invite:', inviteError);
-      return res.status(500).json({ message: 'Erro ao consultar o convite.' });
+      return res.status(500).json({ message: 'Erro ao consultar o convite.', error: inviteError });
     }
+
+    // Log dos dados do convite retornados
+    console.log('Dados do convite encontrados:', inviteData);
 
     if (!inviteData) {
       return res.status(404).json({ message: 'Convite não encontrado.', inviteId });
@@ -1493,7 +1500,7 @@ router.post('/handle_invite/:userId', async (req, res) => {
     const { error: transactionError } = await supabase.rpc('handle_invite_transaction', {
       user_id: userId,
       partner_id: partnerInvite,
-      invite_id: inviteId,  // Corrigir aqui, para garantir que o inviteId está sendo passado corretamente
+      invite_id: inviteId,
       option: option
     });
 
