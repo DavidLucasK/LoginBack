@@ -1408,13 +1408,12 @@ router.post('/inviting/:userId/:partnerId', async (req, res) => {
             return res.status(404).json({ message: 'Invite não enviado' });
         }
 
-        res.status(200).json({ message: 'Invite enviado com sucesso', inviteData });
+        res.status(200).json({ message: 'Invite enviado com sucesso', inviteData, profileData });
     } catch (err) {
         console.error('Erro ao enviar invite:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
-
 
 router.post('/like', async (req, res) => {
     try {
