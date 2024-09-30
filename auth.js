@@ -1319,7 +1319,7 @@ router.get('/get-profile/:userId', async (req, res) => {
         if (!profileData || profileError) {
             const { data: userData, error: userError } = await supabase
                 .from('users')
-                .select('email')
+                .select('*')
                 .eq('id', userId)
                 .single();
             
@@ -1329,7 +1329,7 @@ router.get('/get-profile/:userId', async (req, res) => {
             }
             
             // Se encontrar o email, retorna o email
-            if (userData) {
+            if (userData && !profileData) {
                 return res.status(201).json({ email: userData.email });
             }
             
