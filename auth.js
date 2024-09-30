@@ -1423,7 +1423,7 @@ router.get('/get_invites/:userId', async (req, res) => {
         // Buscar todos os invites onde id_partner é igual ao userId
         const { data: invitesData, error: invitesError } = await supabase
             .from('invites')
-            .select('id_user_invite') // Seleciona apenas o id_user_invite
+            .select('id_user_invite, id_invite') // Seleciona id_user_invite e id_invite
             .eq('id_partner', userId);
 
         if (invitesError) {
@@ -1448,8 +1448,19 @@ router.get('/get_invites/:userId', async (req, res) => {
             return res.status(404).json({ message: 'Erro ao buscar informações dos perfis' });
         }
 
-        // Retornar todos os dados dos perfis
-        res.status(200).json({ message: 'Dados dos invites e perfis encontrados', profilesData });
+        // Combinar os perfis com seus respectivos invites
+        const profilesWithInviteIds = profilesData.map(profile => {
+            // Encontrar o invite correspondente para o profile atual
+            const invite = invitesData.find(inv => inv.id_user_invite === profile.id);
+
+            return {
+                ...profile,           // Dados do perfil
+                id_invite: invite?.id_invite // Adiciona o id_invite do invite correspondente
+            };
+        });
+
+        // Retornar os dados combinados dos perfis e invites
+        res.status(200).json({ message: 'Dados dos invites e perfis encontrados', profiles: profilesWithInviteIds });
     } catch (err) {
         console.error('Erro ao buscar invites:', err);
         res.status(500).json({ message: 'Erro no servidor' });
@@ -1460,7 +1471,13 @@ router.get('/get_invites/:userId', async (req, res) => {
 router.post('/handle_invite/:userId', async (req, res) => {
   const { userId } = req.params;
   const { inviteId, option } = req.body;
-  
+
+  // Verifica se inviteId e option foram fornecidos e são válidos
+  if (!inviteId || isNaN(inviteId) || !Number.isInteger(Number(inviteId))) {
+    console.error('Erro idINvite invalido:');
+    return res.status(400).json({ message: 'ID de convite inválido.' });
+  }
+
   if (option !== 1 && option !== 2) {
     console.error('opção invalida');
     return res.status(400).json({ message: 'Opção inválida.' });
