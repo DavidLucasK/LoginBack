@@ -1461,6 +1461,11 @@ router.post('/handle_invite/:userId', async (req, res) => {
   const { userId } = req.params;
   const { inviteId, option } = req.body;
 
+  // Verifica se o inviteId existe e é um número inteiro válido
+    if (!inviteId || isNaN(inviteId) || !Number.isInteger(Number(inviteId))) {
+    return res.status(400).json({ message: 'ID de convite inválido.' });
+    }
+
   try {
     // Verifica se o invite existe
     const { data: inviteData, error: inviteError } = await supabase
