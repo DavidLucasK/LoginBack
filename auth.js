@@ -1476,6 +1476,7 @@ router.post('/handle_invite/:userId', async (req, res) => {
       .from('invites')
       .select('*')
       .eq('id_invite', inviteId)
+      .single(); // Use single() para garantir que só um registro é retornado
 
     if (inviteError) {
       console.error('Erro ao consultar o invite:', inviteError);
@@ -1492,7 +1493,7 @@ router.post('/handle_invite/:userId', async (req, res) => {
     const { error: transactionError } = await supabase.rpc('handle_invite_transaction', {
       user_id: userId,
       partner_id: partnerInvite,
-      invite_id: inviteId,
+      invite_id: inviteId,  // Corrigir aqui, para garantir que o inviteId está sendo passado corretamente
       option: option
     });
 
@@ -1501,16 +1502,18 @@ router.post('/handle_invite/:userId', async (req, res) => {
       return res.status(500).json({ message: 'Erro ao processar a solicitação.' });
     }
 
+    // Resposta apropriada baseada na opção
     if (option === 1) {
-      res.status(200).json({ message: 'Solicitação aceita com sucesso.' });
+      return res.status(200).json({ message: 'Solicitação aceita com sucesso.' });
     } else if (option === 2) {
-      res.status(200).json({ message: 'Solicitação recusada com sucesso.' });
+      return res.status(200).json({ message: 'Solicitação recusada com sucesso.' });
     }
   } catch (error) {
     console.error('Erro ao lidar com a solicitação de convite:', error);
     res.status(500).json({ message: 'Erro no servidor.' });
   }
 });
+
 
 router.post('/like', async (req, res) => {
     try {
