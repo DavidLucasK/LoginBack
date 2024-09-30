@@ -1345,30 +1345,27 @@ router.get('/get-profile/:userId', async (req, res) => {
     }
 });
 
-// Pega informações do perfil através do userName
+//Pega informações do perfil através do userName
 router.get('/get_profile_username/:userName', async (req, res) => {
     const { userName } = req.params;
 
     try {
-        // Busca os dados na tabela profile_infos com base no userName
+        // Busca os dados na tabela profile_infos com base no userId
         const { data, error } = await supabase
             .from('profile_infos')
             .select('*')
-            .eq('name', userName);
+            .eq('name', userName)
+            .single();
 
         if (error) {
             throw error;
         }
 
-        // Verifica se nenhum dado foi retornado
-        if (!data || data.length === 0) {
-            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        if (!data) {
+            return res.status(404).json({ message: 'Perfil não encontrado.' });
         }
 
-        // Como estamos esperando um único perfil, pegue o primeiro item do array
-        const profile = data[0];
-
-        res.status(200).json(profile);
+        res.status(200).json(data);
     } catch (err) {
         console.error('Erro ao buscar perfil:', err);
         res.status(500).json({ message: 'Erro no servidor' });
@@ -1376,32 +1373,47 @@ router.get('/get_profile_username/:userName', async (req, res) => {
 });
 
 //Enviar solicitação
-router.post('/inviting/:userId/:partnerId'), async (req, res) => {
-    const {userId, partnerId} = req.params;
+router.post('/inviting/:userId/:partnerId', async (req, res) => {
+    const { userId, partnerId } = req.params;
 
     try {
-        const {data: inviteData, error: inviteError} = await supabase
-        .from('invites')
-        .insert([
-            {
-                id_partner: partnerId,
-                id_user_invite: userId,
-                date: Date.now(),
-                // Você pode adicionar mais campos aqui, como a data do comentário, se necessário
-            }
-        ]);
+        // Verificar se o partnerId existe na tabela profile_infos e se o campo partner é diferente de NULL
+        const { data: profileData, error: profileError } = await supabase
+            .from('profile_infos')
+            .select('partner')
+            .eq('id', partnerId)
+            .single(); // Retorna apenas um resultado
+
+        if (profileError) {
+            return res.status(404).json({ message: 'Erro ao buscar informações do parceiro' });
+        }
+
+        // Se o campo 'partner' não for null, significa que o usuário já possui um parceiro
+        if (profileData && profileData.partner !== null) {
+            return res.status(201).json({ message: 'Esse usuário já tem parceiro' });
+        }
+
+        // Inserir o novo invite na tabela 'invites'
+        const { data: inviteData, error: inviteError } = await supabase
+            .from('invites')
+            .insert([
+                {
+                    id_partner: partnerId,
+                    id_user_invite: userId,
+                    date: new Date().toISOString(), // Definir a data atual em formato ISO
+                }
+            ]);
 
         if (inviteError) {
             return res.status(404).json({ message: 'Invite não enviado' });
         }
 
         res.status(200).json({ message: 'Invite enviado com sucesso', inviteData });
-    }
-    catch {
+    } catch (err) {
         console.error('Erro ao enviar invite:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
-}
+});
 
 
 router.post('/like', async (req, res) => {
