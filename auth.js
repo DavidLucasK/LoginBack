@@ -1372,6 +1372,33 @@ router.get('/get_profile_username/:userName', async (req, res) => {
     }
 });
 
+//Enviar solicitação
+router.post('/inviting/:userId/:partnerId'), async (req, res) => {
+    const {userId, partnerId} = req.params;
+
+    try {
+        const {data: inviteData, error: inviteError} = await supabase
+        .from('invites')
+        .insert([
+            {
+                id_partner: partnerId,
+                id_user_invite: userId,
+                date: Date.now(),
+                // Você pode adicionar mais campos aqui, como a data do comentário, se necessário
+            }
+        ]);
+
+        if (inviteError) {
+            return res.status(404).json({ message: 'Invite não enviado' });
+        }
+
+        res.status(200).json({ message: 'Invite enviado com sucesso', inviteData });
+    }
+    catch {
+        console.error('Erro ao enviar invite:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+}
 
 router.post('/like', async (req, res) => {
     try {
