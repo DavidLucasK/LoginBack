@@ -1456,6 +1456,50 @@ router.get('/get_invites/:userId', async (req, res) => {
     }
 });
 
+// Aceitar ou recusar invite
+router.post('/handle_invite/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { inviteId, option } = req.body;
+
+  try {
+    // Verifica se o invite existe
+    const { data: inviteData, error: inviteError } = await supabase
+      .from('invites')
+      .select('*')
+      .eq('id_invite', inviteId)
+      .single();
+
+    if (inviteError || !inviteData) {
+      return res.status(404).json({ message: 'Convite não encontrado.' });
+    }
+
+    const partnerInvite = inviteData.id_user_invite;
+
+    // Inicia uma transação para garantir que todas as operações sejam executadas juntas
+    const { error: transactionError } = await supabase.rpc('handle_invite_transaction', {
+      user_id: userId,
+      partner_id: partnerInvite,
+      invite_id: inviteId,
+      option: option
+    });
+
+    if (transactionError) {
+      return res.status(500).json({ message: 'Erro ao processar a solicitação.' });
+    }
+
+    if (option == 1) {
+      res.status(200).json({ message: 'Solicitação aceita com sucesso.' });
+    } else if (option == 2) {
+      res.status(200).json({ message: 'Solicitação recusada com sucesso.' });
+    } else {
+      res.status(400).json({ message: 'Opção inválida.' });
+    }
+  } catch (error) {
+    console.error('Erro ao lidar com a solicitação de convite:', error);
+    res.status(500).json({ message: 'Erro no servidor.' });
+  }
+});
+
 
 router.post('/like', async (req, res) => {
     try {
