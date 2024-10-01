@@ -233,6 +233,7 @@ router.post('/reset', async (req, res) => {
 
 // ------------------- Endpoints de Frases ------------------- //
 
+//Endpoint para pegar frases pelo userId
 router.get('/get-texts/:userId', async (req, res) => {
     const {userId} = req.params;
 
