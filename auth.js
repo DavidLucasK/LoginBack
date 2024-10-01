@@ -240,7 +240,7 @@ router.get('/get-texts/:userId', async (req, res) => {
     try {
         const { data: dataTexts, error: errorText} = await supabase
         .from('texts')
-        .select('*')
+        .select('texto1', 'texto2', 'texto3')
         .eq('user_id', userId);
 
         if (errorText) {
