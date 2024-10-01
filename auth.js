@@ -251,7 +251,7 @@ router.get('/get-texts/:userId', async (req, res) => {
             return res.status(201).json({ message: 'Nenhum texto encontrado para esse userId' });
         }
 
-        return res.status(200).json({ message: 'E-mail do destinatário inválido!', textos: dataTexts });
+        return res.status(200).json({ message: 'Textos retornados com sucesso!', textos: dataTexts });
     }
     catch {
         console.error(`Erro ao pegar textos pro userId:${userId}`, err);
