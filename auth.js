@@ -240,7 +240,7 @@ router.get('/get-texts/:userId', async (req, res) => {
     try {
         const { data: dataTexts, error: errorText } = await supabase
             .from('texts')
-            .select('texto1, texto2, texto3')
+            .select('id, texto1, texto2, texto3')
             .eq('user_id', userId)
 
         if (errorText) {
@@ -257,8 +257,6 @@ router.get('/get-texts/:userId', async (req, res) => {
         res.status(500).json({ message: `Erro ao pegar textos pro userId:${userId}` });
     }
 });
-
-
 
 // ------------------- Fim dos Endpoints de Frases ------------------- //
 
