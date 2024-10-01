@@ -27,6 +27,240 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+// ------------------- Endpoints do Login ------------------- //
+
+// Endpoint para registro
+router.post('/register', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const { data: existingUser, error: existingUserError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (existingUserError && existingUserError.code !== 'PGRST116') {
+            throw existingUserError;
+        }
+
+        if (existingUser) {
+            return res.status(205).json({ message: 'Usuario com esse email já existe' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const { data, error } = await supabase
+            .from('users')
+            .insert([{ email, password: hashedPassword }]);
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(201).json({ message: 'Conta criada com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao registrar o usuário:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+// Endpoint para login
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error && error.code === 'PGRST116') {
+            return res.status(400).json({ message: `Senha incorreta para ${email} ou email não cadastrado` });
+        } else if (error) {
+            throw error;
+        }
+
+        if (!user) {
+            return res.status(400).json({ message: `Usuário ${user} não existe!` });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(400).json({ message: `Senha incorreta.` });
+        }
+
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.json({ token, userId: user.id, message: 'Login bem-sucedido!' });
+    } catch (err) {
+        console.error('Erro ao fazer login:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+// Endpoint para solicitar redefinição de senha
+router.post('/forgot', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error || !user) {
+            return res.status(400).json({ message: 'Usuário não encontrado' });
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // Expira em 15 minutos
+
+        // Inserir o token e a data de expiração diretamente
+        const { error: insertError } = await supabase
+            .from('password_resets')
+            .insert([{ email, token, created_at: now, expires_at: expiresAt }]);
+
+        if (insertError) {
+            throw insertError;
+        }
+
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Redefinição de Senha',
+            text: `Você solicitou a redefinição de senha da sua conta. Clique no link para redefinir: ${process.env.FRONTEND_URL}/reset.html?token=${token}&email=${email}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+                    <h2 style="color: #333;">Redefinição de Senha</h2>
+                    <p style="color: #666;">Você solicitou a redefinição de senha da sua conta.</p>
+                    <p style="color: #666;">Clique no botão abaixo para redefinir sua senha:</p>
+                    <div style="display: grid; align-items: center;">
+                        <a href="${process.env.FRONTEND_URL}/redirect.html?token=${token}&email=${email}" style="background-color: #7b30d0; color: #F5F3F4; margin-bottom: 20px; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            Redefinir Senha via App
+                        </a>
+                    </div>
+                    <p style="color: #999; margin-top: 20px;">Se você não solicitou esta alteração, por favor ignore este e-mail.</p>
+                </div>
+            `
+        };
+        
+        
+
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.error('Erro ao enviar e-mail:', err);
+                return res.status(500).json({ message: 'Erro ao enviar e-mail!' });
+            } else {
+                console.log('E-mail enviado:', info.response);
+                return res.status(200).json({ message: 'E-mail enviado com sucesso!' });
+            }
+        });
+    } catch (err) {
+        console.error('Erro ao solicitar redefinição de senha:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+// Endpoint para resetar a senha
+router.post('/reset', async (req, res) => {
+    const { email, token, newPassword } = req.body;
+
+    console.log('Requisição recebida para redefinir senha');
+    console.log('Email:', email);
+    console.log('Token:', token);
+    console.log('Nova Senha:', newPassword);
+
+    if (!email || !token || !newPassword) {
+        console.log('Dados incompletos na requisição');
+        return res.status(400).json({ message: 'Dados incompletos' });
+    }
+
+    try {
+        // Verificar o token
+        const { data: resetRequest, error: resetError } = await supabase
+            .from('password_resets')
+            .select('*')
+            .eq('email', email)
+            .eq('token', token)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        // Verifica se houve erro na consulta ou se não encontrou o registro
+        if (resetError || !resetRequest) {
+            console.log('Dados retornados da consulta de redefinição de senha:', resetRequest);
+            console.log('Erro na consulta de redefinição de senha:', resetError);
+            return res.status(400).json({ message: 'Token inválido ou expirado' });
+        }
+
+        // Verificar se o token expirou
+        const expiresAt = new Date(resetRequest.expires_at);
+        if (new Date() > expiresAt) {
+            return res.status(400).json({ message: 'Token expirado' });
+        }
+
+        // Atualizar a senha
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password: hashedPassword })
+            .eq('email', email);
+
+        if (updateError) {
+            throw updateError;
+        }
+
+        // Remover o token após a redefinição da senha
+        await supabase
+            .from('password_resets')
+            .delete()
+            .eq('email', email)
+            .eq('token', token);
+
+        res.status(200).json({ message: 'Senha redefinida com sucesso' });
+    } catch (err) {
+        console.error('Erro ao redefinir senha:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+// ------------------- Fim Endpoints do Login ------------------- //
+
+
+// ------------------- Endpoints de Frases ------------------- //
+
+router.get('/get-texts/:userId', async (req, res) => {
+    const {userId} = req.params;
+
+    try {
+        const { data: dataTexts, error: errorText} = await supabase
+        .from('texts')
+        .select('*')
+        .eq('user_id', userId);
+
+        if (errorText) {
+            throw errorText;
+        }
+
+        if (!dataTexts) {
+            return res.status(201).json({ message: 'Nenhum texto encontrado para esse userId' });
+        }
+
+        return res.status(200).json({ message: 'E-mail do destinatário inválido!', textos: dataTexts });
+    }
+    catch {
+        console.error(`Erro ao pegar textos pro userId:${userId}`, err);
+        res.status(500).json({ message: `Erro ao pegar textos pro userId:${userId}`});
+    }
+
+})
+
+// ------------------- Fim dos Endpoints de Frases ------------------- //
+
 // Grava o resgate feito pelo usuário na tabela resgates
 router.post('/insert-redemption/:userId', async (req, res) => {
     const { rewardId, pointsRequired } = req.body;
@@ -256,205 +490,6 @@ router.post('/upload_imagepic', upload.single('photo'), async (req, res) => {
         res.status(200).json({ message: 'Foto enviada com sucesso!', fileUrl });
     } catch (err) {
         console.error('Erro ao fazer upload da foto:', err);
-        res.status(500).json({ message: 'Erro no servidor' });
-    }
-});
-
-// Endpoint para registro
-router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const { data: existingUser, error: existingUserError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
-
-        if (existingUserError && existingUserError.code !== 'PGRST116') {
-            throw existingUserError;
-        }
-
-        if (existingUser) {
-            return res.status(205).json({ message: 'Usuario com esse email já existe' });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const { data, error } = await supabase
-            .from('users')
-            .insert([{ email, password: hashedPassword }]);
-
-        if (error) {
-            throw error;
-        }
-
-        res.status(201).json({ message: 'Conta criada com sucesso!' });
-    } catch (err) {
-        console.error('Erro ao registrar o usuário:', err);
-        res.status(500).json({ message: 'Erro no servidor' });
-    }
-});
-
-// Endpoint para login
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
-
-        if (error && error.code === 'PGRST116') {
-            return res.status(400).json({ message: `Senha incorreta para ${email} ou email não cadastrado` });
-        } else if (error) {
-            throw error;
-        }
-
-        if (!user) {
-            return res.status(400).json({ message: `Usuário ${user} não existe!` });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            return res.status(400).json({ message: `Senha incorreta.` });
-        }
-
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        res.json({ token, userId: user.id, message: 'Login bem-sucedido!' });
-    } catch (err) {
-        console.error('Erro ao fazer login:', err);
-        res.status(500).json({ message: 'Erro no servidor' });
-    }
-});
-
-// Endpoint para solicitar redefinição de senha
-router.post('/forgot', async (req, res) => {
-    const { email } = req.body;
-
-    try {
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
-
-        if (error || !user) {
-            return res.status(400).json({ message: 'Usuário não encontrado' });
-        }
-
-        const token = crypto.randomBytes(32).toString('hex');
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // Expira em 15 minutos
-
-        // Inserir o token e a data de expiração diretamente
-        const { error: insertError } = await supabase
-            .from('password_resets')
-            .insert([{ email, token, created_at: now, expires_at: expiresAt }]);
-
-        if (insertError) {
-            throw insertError;
-        }
-
-        const mailOptions = {
-            from: process.env.EMAIL,
-            to: email,
-            subject: 'Redefinição de Senha',
-            text: `Você solicitou a redefinição de senha da sua conta. Clique no link para redefinir: ${process.env.FRONTEND_URL}/reset.html?token=${token}&email=${email}`,
-            html: `
-                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-                    <h2 style="color: #333;">Redefinição de Senha</h2>
-                    <p style="color: #666;">Você solicitou a redefinição de senha da sua conta.</p>
-                    <p style="color: #666;">Clique no botão abaixo para redefinir sua senha:</p>
-                    <div style="display: grid; align-items: center;">
-                        <a href="${process.env.FRONTEND_URL}/redirect.html?token=${token}&email=${email}" style="background-color: #7b30d0; color: #F5F3F4; margin-bottom: 20px; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                            Redefinir Senha via App
-                        </a>
-                    </div>
-                    <p style="color: #999; margin-top: 20px;">Se você não solicitou esta alteração, por favor ignore este e-mail.</p>
-                </div>
-            `
-        };
-        
-        
-
-        transporter.sendMail(mailOptions, (err, info) => {
-            if (err) {
-                console.error('Erro ao enviar e-mail:', err);
-                return res.status(500).json({ message: 'Erro ao enviar e-mail!' });
-            } else {
-                console.log('E-mail enviado:', info.response);
-                return res.status(200).json({ message: 'E-mail enviado com sucesso!' });
-            }
-        });
-    } catch (err) {
-        console.error('Erro ao solicitar redefinição de senha:', err);
-        res.status(500).json({ message: 'Erro no servidor' });
-    }
-});
-
-// Endpoint para resetar a senha
-router.post('/reset', async (req, res) => {
-    const { email, token, newPassword } = req.body;
-
-    console.log('Requisição recebida para redefinir senha');
-    console.log('Email:', email);
-    console.log('Token:', token);
-    console.log('Nova Senha:', newPassword);
-
-    if (!email || !token || !newPassword) {
-        console.log('Dados incompletos na requisição');
-        return res.status(400).json({ message: 'Dados incompletos' });
-    }
-
-    try {
-        // Verificar o token
-        const { data: resetRequest, error: resetError } = await supabase
-            .from('password_resets')
-            .select('*')
-            .eq('email', email)
-            .eq('token', token)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-        // Verifica se houve erro na consulta ou se não encontrou o registro
-        if (resetError || !resetRequest) {
-            console.log('Dados retornados da consulta de redefinição de senha:', resetRequest);
-            console.log('Erro na consulta de redefinição de senha:', resetError);
-            return res.status(400).json({ message: 'Token inválido ou expirado' });
-        }
-
-        // Verificar se o token expirou
-        const expiresAt = new Date(resetRequest.expires_at);
-        if (new Date() > expiresAt) {
-            return res.status(400).json({ message: 'Token expirado' });
-        }
-
-        // Atualizar a senha
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        const { error: updateError } = await supabase
-            .from('users')
-            .update({ password: hashedPassword })
-            .eq('email', email);
-
-        if (updateError) {
-            throw updateError;
-        }
-
-        // Remover o token após a redefinição da senha
-        await supabase
-            .from('password_resets')
-            .delete()
-            .eq('email', email)
-            .eq('token', token);
-
-        res.status(200).json({ message: 'Senha redefinida com sucesso' });
-    } catch (err) {
-        console.error('Erro ao redefinir senha:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
