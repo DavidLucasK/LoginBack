@@ -233,7 +233,7 @@ router.post('/reset', async (req, res) => {
 
 // ------------------- Endpoints de Frases ------------------- //
 
-// Endpoint para pegar frases aleatórias pelo userId
+// Endpoint para pegar uma linha aleatória pelos textos do userId
 router.get('/get-texts/:userId', async (req, res) => {
     const { userId } = req.params;
 
@@ -242,8 +242,9 @@ router.get('/get-texts/:userId', async (req, res) => {
             .from('texts')
             .select('texto1, texto2, texto3')
             .eq('user_id', userId)
-            .order('RANDOM', { ascending: true }) // Ordena de forma aleatória
-            .limit(1); // Limita o retorno a 1 linha
+            .order('id', { ascending: false }) // Isso só para garantir uma ordem prévia
+            .limit(1) // Limita o retorno a 1 linha
+            .order('RANDOM()', { ascending: true }); // Ordena de forma aleatória, função correta
 
         if (errorText) {
             throw errorText;
@@ -253,7 +254,7 @@ router.get('/get-texts/:userId', async (req, res) => {
             return res.status(201).json({ message: 'Nenhum texto encontrado para esse userId' });
         }
 
-        return res.status(200).json({ message: 'Textos retornados com sucesso!', textos: dataTexts });
+        return res.status(200).json({ message: 'Texto retornado com sucesso!', textos: dataTexts });
     } catch (err) {
         console.error(`Erro ao pegar textos pro userId:${userId}`, err);
         res.status(500).json({ message: `Erro ao pegar textos pro userId:${userId}` });
