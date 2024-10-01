@@ -233,34 +233,33 @@ router.post('/reset', async (req, res) => {
 
 // ------------------- Endpoints de Frases ------------------- //
 
-//Endpoint para pegar frases pelo userId
+// Endpoint para pegar frases aleatórias pelo userId
 router.get('/get-texts/:userId', async (req, res) => {
-    const {userId} = req.params;
+    const { userId } = req.params;
 
     try {
-        const { data: dataTexts, error: errorText} = await supabase
-        .from('texts')
-        .select('texto1', 'texto2', 'texto3')
-        .eq('user_id', userId)
-        .order('RANDOM', { ascending: true })
-        .limit(1);
+        const { data: dataTexts, error: errorText } = await supabase
+            .from('texts')
+            .select('texto1, texto2, texto3')
+            .eq('user_id', userId)
+            .order('RANDOM', { ascending: true }) // Ordena de forma aleatória
+            .limit(1); // Limita o retorno a 1 linha
 
         if (errorText) {
             throw errorText;
         }
 
-        if (!dataTexts) {
+        if (!dataTexts || dataTexts.length === 0) {
             return res.status(201).json({ message: 'Nenhum texto encontrado para esse userId' });
         }
 
         return res.status(200).json({ message: 'Textos retornados com sucesso!', textos: dataTexts });
-    }
-    catch {
+    } catch (err) {
         console.error(`Erro ao pegar textos pro userId:${userId}`, err);
-        res.status(500).json({ message: `Erro ao pegar textos pro userId:${userId}`});
+        res.status(500).json({ message: `Erro ao pegar textos pro userId:${userId}` });
     }
+});
 
-})
 
 // ------------------- Fim dos Endpoints de Frases ------------------- //
 
