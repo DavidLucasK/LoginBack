@@ -470,7 +470,7 @@ router.get('/points/:userId', async (req, res) => {
             .single();  // Obtém um único registro
 
         if (!userPoints) {
-            return res.status(404).json({ message: 'Usuário não encontrado' });
+            return res.status(201).json({ message: 'Usuário não encontrado' });
         }
 
         return res.status(200).json({ points: userPoints.points }); // Adicione um return aqui
