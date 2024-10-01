@@ -469,10 +469,6 @@ router.get('/points/:userId', async (req, res) => {
             .eq('id', userId)
             .single();  // Obtém um único registro
 
-        if (error) {
-            throw error;
-        }
-
         if (!userPoints) {
             return res.status(404).json({ message: 'Usuário não encontrado' });
         }
