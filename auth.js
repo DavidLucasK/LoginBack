@@ -1315,7 +1315,12 @@ router.get('/get-profile/:userId', async (req, res) => {
             .eq('id', userId)
             .single();
 
-        // Se não houver dados na tabela profile_infos ou ocorrer um erro, busca o email na tabela users
+        // Se encontrou dados na tabela profile_infos
+        if (profileData) {
+            return res.status(200).json({ message: 'Dados completos retornados', data: profileData });
+        }
+
+        // Se não encontrar na tabela profile_infos ou houver erro (exceto erro do servidor), busca na tabela users
         if (!profileData || profileError) {
             const { data: userData, error: userError } = await supabase
                 .from('users')
@@ -1323,27 +1328,20 @@ router.get('/get-profile/:userId', async (req, res) => {
                 .eq('id', userId)
                 .single();
             
-            // Se houver erro ao buscar na tabela users, retorna erro ao cliente
-            if (userError) {
-                return res.status(500).json({ message: 'Erro ao buscar email do usuário' });
+            // Se não encontrar na tabela users, retorna erro 404
+            if (!userData || userError) {
+                return res.status(404).json({ message: 'Usuário não encontrado' });
             }
             
             // Se encontrar o email, retorna o email
-            if (userData) {
-                return res.status(201).json({ email: userData.email });
-            }
-            
-            // Caso não encontre o userId na tabela users
-            return res.status(404).json({ message: 'Usuário não encontrado' });
+            return res.status(201).json({ message: 'Email retornado', email: userData.email });
         }
-
-        // Se encontrou dados na tabela profile_infos, retorna esses dados
-        res.status(200).json(profileData);
     } catch (err) {
         console.error('Erro ao buscar perfil:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
+
 
 // Pega informações do perfil através do userName
 router.get('/get_profile_username/:userName', async (req, res) => {
