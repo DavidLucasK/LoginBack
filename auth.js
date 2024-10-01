@@ -1316,7 +1316,6 @@ router.get('/get-profile/:userId', async (req, res) => {
             .single();
 
         if (profileData) {
-            console('Dados completos retornados', profileData);
             res.status(200).json({message: 'Dados completos retornados', profileData});
         }
 
@@ -1335,7 +1334,6 @@ router.get('/get-profile/:userId', async (req, res) => {
             
             // Se encontrar o email, retorna o email
             if (userData) {
-                console('Somente email retornado', profileData);
                 return res.status(201).json({ email: userData.email });
             }
             
