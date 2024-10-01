@@ -242,16 +242,15 @@ router.get('/get-texts/:userId', async (req, res) => {
             .from('texts')
             .select('texto1, texto2, texto3')
             .eq('user_id', userId)
-            .order('id', { ascending: false }) // Isso só para garantir uma ordem prévia
-            .limit(1) // Limita o retorno a 1 linha
-            .order('RANDOM()', { ascending: true }); // Ordena de forma aleatória, função correta
+            .order('RANDOM()', { ascending: true }) // Apenas a ordenação aleatória
+            .limit(1); // Limita o retorno a 1 linha
 
         if (errorText) {
             throw errorText;
         }
 
         if (!dataTexts || dataTexts.length === 0) {
-            return res.status(201).json({ message: 'Nenhum texto encontrado para esse userId' });
+            return res.status(404).json({ message: 'Nenhum texto encontrado para esse userId' }); // Status 404 em vez de 201
         }
 
         return res.status(200).json({ message: 'Texto retornado com sucesso!', textos: dataTexts });
@@ -260,6 +259,7 @@ router.get('/get-texts/:userId', async (req, res) => {
         res.status(500).json({ message: `Erro ao pegar textos pro userId:${userId}` });
     }
 });
+
 
 
 // ------------------- Fim dos Endpoints de Frases ------------------- //
