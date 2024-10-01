@@ -241,7 +241,9 @@ router.get('/get-texts/:userId', async (req, res) => {
         const { data: dataTexts, error: errorText} = await supabase
         .from('texts')
         .select('texto1', 'texto2', 'texto3')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .order('RANDOM', { ascending: true })
+        .limit(1);
 
         if (errorText) {
             throw errorText;
