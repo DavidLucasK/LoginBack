@@ -1315,6 +1315,11 @@ router.get('/get-profile/:userId', async (req, res) => {
             .eq('id', userId)
             .single();
 
+        if (profileData) {
+            console.data('Dados completos retornados', profileData);
+            res.status(200).json({message: 'Dados completos retornados', profileData});
+        }
+
         // Se não houver dados na tabela profile_infos ou ocorrer um erro, busca o email na tabela users
         if (!profileData || profileError) {
             const { data: userData, error: userError } = await supabase
@@ -1329,7 +1334,8 @@ router.get('/get-profile/:userId', async (req, res) => {
             }
             
             // Se encontrar o email, retorna o email
-            if (userData && !profileData) {
+            if (userData) {
+                console.data('Somente email retornado', profileData);
                 return res.status(201).json({ email: userData.email });
             }
             
