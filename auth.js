@@ -242,8 +242,6 @@ router.get('/get-texts/:userId', async (req, res) => {
             .from('texts')
             .select('texto1, texto2, texto3')
             .eq('user_id', userId)
-            .order('RANDOM()', { ascending: true }) // Apenas a ordenação aleatória
-            .limit(1); // Limita o retorno a 1 linha
 
         if (errorText) {
             throw errorText;
