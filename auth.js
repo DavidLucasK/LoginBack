@@ -1315,15 +1315,11 @@ router.get('/get-profile/:userId', async (req, res) => {
             .eq('id', userId)
             .single();
 
-        if (profileData) {
-            res.status(200).json({message: 'Dados completos retornados', profileData});
-        }
-
         // Se não houver dados na tabela profile_infos ou ocorrer um erro, busca o email na tabela users
         if (!profileData || profileError) {
             const { data: userData, error: userError } = await supabase
                 .from('users')
-                .select('*')
+                .select('email')
                 .eq('id', userId)
                 .single();
             
@@ -1349,191 +1345,37 @@ router.get('/get-profile/:userId', async (req, res) => {
     }
 });
 
-//Pega informações do perfil através do userName
+// Pega informações do perfil através do userName
 router.get('/get_profile_username/:userName', async (req, res) => {
     const { userName } = req.params;
 
     try {
-        // Busca os dados na tabela profile_infos com base no userId
+        // Busca os dados na tabela profile_infos com base no userName
         const { data, error } = await supabase
             .from('profile_infos')
             .select('*')
-            .eq('name', userName)
-            .single();
+            .eq('name', userName);
 
-        if (!data) {
-            return res.status(202).json({ message: 'Perfil não encontrado.' });
+        if (error) {
+            throw error;
         }
 
-        res.status(200).json(data);
+        // Verifica se nenhum dado foi retornado
+        if (!data || data.length === 0) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        // Como estamos esperando um único perfil, pegue o primeiro item do array
+        const profile = data[0];
+
+        res.status(200).json(profile);
     } catch (err) {
         console.error('Erro ao buscar perfil:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
 
-//Enviar solicitação
-router.post('/inviting/:userId/:partnerId', async (req, res) => {
-    const { userId, partnerId } = req.params;
 
-    try {
-        // Verificar se o partnerId existe na tabela profile_infos e se o campo partner é diferente de NULL
-        const { data: profileData, error: profileError } = await supabase
-            .from('profile_infos')
-            .select('partner')
-            .eq('id', partnerId)
-            .single(); // Retorna apenas um resultado
-
-        if (profileError) {
-            return res.status(404).json({ message: 'Erro ao buscar informações do parceiro' });
-        }
-
-        // Se o campo 'partner' não for null, significa que o usuário já possui um parceiro
-        if (profileData && profileData.partner !== null) {
-            return res.status(201).json({ message: 'Esse usuário já tem parceiro' });
-        }
-
-        // Inserir o novo invite na tabela 'invites'
-        const { data: inviteData, error: inviteError } = await supabase
-            .from('invites')
-            .insert([
-                {
-                    id_partner: partnerId,
-                    id_user_invite: userId,
-                    date: new Date().toISOString(), // Definir a data atual em formato ISO
-                }
-            ]);
-
-        if (inviteError) {
-            return res.status(404).json({ message: 'Invite não enviado' });
-        }
-
-        res.status(200).json({ message: 'Invite enviado com sucesso' });
-    } catch (err) {
-        console.error('Erro ao enviar invite:', err);
-        res.status(500).json({ message: 'Erro no servidor' });
-    }
-});
-
-// Invites para o userId
-router.get('/get_invites/:userId', async (req, res) => {
-    const { userId } = req.params;
-
-    try {
-        // Buscar todos os invites onde id_partner é igual ao userId
-        const { data: invitesData, error: invitesError } = await supabase
-            .from('invites')
-            .select('id_user_invite, id_invite') // Seleciona id_user_invite e id_invite
-            .eq('id_partner', userId);
-
-        if (invitesError) {
-            return res.status(404).json({ message: 'Erro ao buscar informações dos invites' });
-        }
-
-        // Se não houver invites, retornar uma mensagem apropriada
-        if (!invitesData || invitesData.length === 0) {
-            return res.status(201).json({ message: 'Nenhum invite encontrado' });
-        }
-
-        // Extrair todos os id_user_invite
-        const userInviteIds = invitesData.map(invite => invite.id_user_invite);
-
-        // Fazer um select na tabela profile_infos com os ids dos invites
-        const { data: profilesData, error: profilesError } = await supabase
-            .from('profile_infos')
-            .select('*')
-            .in('id', userInviteIds); // Usa a cláusula IN para buscar múltiplos ids
-
-        if (profilesError) {
-            return res.status(404).json({ message: 'Erro ao buscar informações dos perfis' });
-        }
-
-        // Combinar os perfis com seus respectivos invites
-        const profilesWithInviteIds = profilesData.map(profile => {
-            // Encontrar o invite correspondente para o profile atual
-            const invite = invitesData.find(inv => inv.id_user_invite === profile.id);
-
-            return {
-                ...profile,           // Dados do perfil
-                id_invite: invite?.id_invite // Adiciona o id_invite do invite correspondente
-            };
-        });
-
-        // Retornar os dados combinados dos perfis e invites
-        res.status(200).json({ message: 'Dados dos invites e perfis encontrados', profiles: profilesWithInviteIds });
-    } catch (err) {
-        console.error('Erro ao buscar invites:', err);
-        res.status(500).json({ message: 'Erro no servidor' });
-    }
-});
-
-// Aceitar ou recusar invite
-router.post('/handle_invite/:userId', async (req, res) => {
-  const { userId } = req.params;
-  const { inviteId, option } = req.body;
-
-  // Verifica se inviteId e option foram fornecidos e são válidos
-  if (!inviteId || isNaN(inviteId) || !Number.isInteger(Number(inviteId))) {
-    console.error('Erro idINvite invalido:');
-    return res.status(400).json({ message: 'ID de convite inválido.' });
-  }
-
-  if (option !== 1 && option !== 2) {
-    console.error('opção invalida');
-    return res.status(400).json({ message: 'Opção inválida.' });
-  }
-
-  try {
-    // Log do inviteId para verificar se está correto
-    console.log('Buscando convite com ID:', inviteId);
-
-    // Verifica se o invite existe
-    const { data: inviteData, error: inviteError } = await supabase
-      .from('invites')
-      .select('*')
-      .eq('id_invite', inviteId)
-      .single(); // Use single() para garantir que só um registro é retornado
-
-    // Verifique o erro e os dados retornados
-    if (inviteError) {
-      console.error('Erro ao consultar o invite:', inviteError);
-      return res.status(500).json({ message: 'Erro ao consultar o convite.', error: inviteError });
-    }
-
-    // Log dos dados do convite retornados
-    console.log('Dados do convite encontrados:', inviteData);
-
-    if (!inviteData) {
-    console.error('convite não encontrado');
-      return res.status(404).json({ message: 'Convite não encontrado.', inviteId });
-    }
-
-    const partnerInvite = inviteData.id_user_invite;
-
-    // Inicia uma transação para garantir que todas as operações sejam executadas juntas
-    const { error: transactionError } = await supabase.rpc('handle_invite_transaction', {
-      user_id: userId,
-      partner_id: partnerInvite,
-      invite_id: inviteId,
-      option: option
-    });
-
-    if (transactionError) {
-      console.error('Erro ao executar a transação:', transactionError);
-      return res.status(500).json({ message: 'Erro ao processar a solicitação.' });
-    }
-
-    // Resposta apropriada baseada na opção
-    if (option === 1) {
-      return res.status(200).json({ message: 'Solicitação aceita com sucesso.' });
-    } else if (option === 2) {
-      return res.status(200).json({ message: 'Solicitação recusada com sucesso.' });
-    }
-  } catch (error) {
-    console.error('Erro ao lidar com a solicitação de convite:', error);
-    res.status(500).json({ message: 'Erro no servidor.' });
-  }
-});
 
 router.post('/like', async (req, res) => {
     try {
