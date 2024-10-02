@@ -340,6 +340,76 @@ router.get('/get_invites/:userId', async (req, res) => {
     }
 });
 
+// Aceitar ou recusar invite
+router.post('/handle_invite/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const { inviteId: inviteIdString, option } = req.body; // capturando inviteId como string
+  
+    // Verifica se inviteId foi fornecido e é válido
+    if (!inviteIdString || isNaN(inviteIdString)) {
+      console.error('Erro: inviteId inválido ou ausente:', inviteIdString);
+      return res.status(400).json({ message: 'ID de convite inválido ou ausente.' });
+    }
+  
+    // Converte o inviteId para número inteiro (int4)
+    const inviteId = parseInt(inviteIdString, 10);
+  
+    if (!Number.isInteger(inviteId)) {
+      console.error('Erro: inviteId não é um número inteiro:', inviteId);
+      return res.status(400).json({ message: 'ID de convite inválido.' });
+    }
+  
+    if (option !== 1 && option !== 2) {
+      console.error('Erro: opção inválida:', option);
+      return res.status(400).json({ message: 'Opção inválida.' });
+    }
+  
+    try {
+      // Log para verificar inviteId após conversão
+      console.log('Buscando convite com ID:', inviteId);
+  
+      // Verifica se o invite existe
+      const { data: inviteData, error: inviteError } = await supabase
+        .from('invites')
+        .select('*')
+        .eq('id_invite', inviteId)
+        .single(); // Garante que apenas um registro é retornado
+  
+      if (inviteError) {
+        console.error('Erro ao consultar o convite:', inviteError);
+        return res.status(500).json({ message: 'Erro ao consultar o convite.', error: inviteError });
+      }
+  
+      if (!inviteData) {
+        return res.status(404).json({ message: 'Convite não encontrado.' });
+      }
+  
+      const partnerInvite = inviteData.id_user_invite;
+  
+      // Inicia uma transação para garantir que todas as operações sejam executadas juntas
+      const { error: transactionError } = await supabase.rpc('handle_invite_transaction', {
+        user_id: userId,
+        partner_id: partnerInvite,
+        invite_id: inviteId,
+        option: option
+      });
+  
+      if (transactionError) {
+        console.error('Erro ao executar a transação:', transactionError);
+        return res.status(500).json({ message: 'Erro ao processar a solicitação.' });
+      }
+  
+      // Respostas apropriadas para aceitar ou recusar a solicitação
+      if (option === 1) {
+        return res.status(200).json({ message: 'Solicitação aceita com sucesso.' });
+      } else if (option === 2) {
+        return res.status(200).json({ message: 'Solicitação recusada com sucesso.' });
+      }
+    } catch (error) {
+      console.error('Erro ao lidar com a solicitação de convite:', error);
+      res.status(500).json({ message: 'Erro no servidor.' });
+    }
+  });
 
 // ------------------- Endpoints de Frases ------------------- //
 
