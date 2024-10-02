@@ -438,6 +438,57 @@ router.get('/get-texts/:userId', async (req, res) => {
     }
 });
 
+// Endpoint para buscar Text com idText
+router.get('/textSingle/:idText', async (req, res) => {
+    const { idText } = req.params;
+    try {
+        // Buscar o texto com o id fornecido
+        const { data: textData, error: textError } = await supabase
+            .from('texts')
+            .select('*')
+            .eq('id', idText)
+            .single(); // Para garantir que apenas um texto seja retornado
+
+        if (textError) {
+            throw textError;
+        }
+
+        if (!textData) {
+            return res.status(404).json({ message: 'Texto não encontrada' });
+        }
+
+        // Retornar texto pelo textId
+        res.status(200).json({ message: 'Texto retornado com sucesso', textData});
+    } catch (err) {
+        console.error('Erro ao buscar pergunta e respostas:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+// Endpoint para editar um texto do parceiro
+router.post('/editText/:idText', async (req, res) => {
+    const { idText } = req.params;
+    const { textos1, textos2, textos3} = req.body;
+
+    try {
+        // Atualiza a pergunta
+        const { error: updateQuestionError } = await supabase
+            .from('texts')
+            .update({ texto1: textos1, texto2: textos2, texto3: textos3 })
+            .eq('id', idText);
+
+        if (updateQuestionError) {
+            throw updateQuestionError;
+        }
+
+        res.status(200).json({ message: 'Texto atualizado com sucesso!' });
+
+    } catch (err) {
+        console.error('Erro ao atualizar texto:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 // Endpoint para criar textos para parceiro
 router.post('/createText', async (req, res) => {
     const { partnerId, textos1, textos2, textos3 } = req.body;
@@ -938,6 +989,54 @@ router.get('/questionSingle/:idPergunta', async (req, res) => {
     }
 });
 
+// Endpoint para editar uma pergunta e suas respostas
+router.post('/editQuestion/:idPergunta', async (req, res) => {
+    const { idPergunta } = req.params;
+    const { pergunta, indiceCorreta, respostas } = req.body; // Captura a pergunta, o índice da resposta correta e as respostas
+
+    // Verifique se o índice da resposta correta está entre 1 e 4
+    if (indiceCorreta < 1 || indiceCorreta > 4) {
+        return res.status(400).json({ message: 'O índice da resposta correta deve estar entre 1 e 4.' });
+    }
+
+    try {
+        // Atualiza a pergunta
+        const { error: updateQuestionError } = await supabase
+            .from('perguntas')
+            .update({ pergunta, resposta_correta: indiceCorreta }) // Atualiza a pergunta com o novo valor
+            .eq('id', idPergunta); // Filtra pela pergunta que deve ser atualizada
+
+        if (updateQuestionError) {
+            throw updateQuestionError;
+        }
+
+        // Atualiza as respostas
+        for (const resposta of respostas) {
+            const { id, resposta: respostaTexto } = resposta;
+
+            // Verifica se a resposta atual deve ser marcada como correta
+            const isCorreta = respostas.findIndex(r => r.id === id) === (indiceCorreta - 1); // Ajusta o índice para 0-3
+
+            const { error: updateAnswerError } = await supabase
+                .from('respostas')
+                .update({
+                    resposta: respostaTexto,
+                    is_correta: isCorreta // Define se a resposta é correta com base na lógica
+                })
+                .eq('id', id); // Filtra pela ID da resposta que deve ser atualizada
+
+            if (updateAnswerError) {
+                throw updateAnswerError;
+            }
+        }
+
+        res.status(200).json({ message: 'Pergunta e respostas atualizadas com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao atualizar pergunta e respostas:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 // Endpoint para criar perguntas e respostas
 router.post('/createQuestion', async (req, res) => {
     const { pergunta, indiceCorreta, partnerId, respostas } = req.body;
@@ -988,54 +1087,6 @@ router.post('/createQuestion', async (req, res) => {
         });
     } catch (err) {
         console.error('Erro ao criar pergunta e respostas:', err);
-        res.status(500).json({ message: 'Erro no servidor' });
-    }
-});
-
-// Endpoint para editar uma pergunta e suas respostas
-router.post('/editQuestion/:idPergunta', async (req, res) => {
-    const { idPergunta } = req.params;
-    const { pergunta, indiceCorreta, respostas } = req.body; // Captura a pergunta, o índice da resposta correta e as respostas
-
-    // Verifique se o índice da resposta correta está entre 1 e 4
-    if (indiceCorreta < 1 || indiceCorreta > 4) {
-        return res.status(400).json({ message: 'O índice da resposta correta deve estar entre 1 e 4.' });
-    }
-
-    try {
-        // Atualiza a pergunta
-        const { error: updateQuestionError } = await supabase
-            .from('perguntas')
-            .update({ pergunta, resposta_correta: indiceCorreta }) // Atualiza a pergunta com o novo valor
-            .eq('id', idPergunta); // Filtra pela pergunta que deve ser atualizada
-
-        if (updateQuestionError) {
-            throw updateQuestionError;
-        }
-
-        // Atualiza as respostas
-        for (const resposta of respostas) {
-            const { id, resposta: respostaTexto } = resposta;
-
-            // Verifica se a resposta atual deve ser marcada como correta
-            const isCorreta = respostas.findIndex(r => r.id === id) === (indiceCorreta - 1); // Ajusta o índice para 0-3
-
-            const { error: updateAnswerError } = await supabase
-                .from('respostas')
-                .update({
-                    resposta: respostaTexto,
-                    is_correta: isCorreta // Define se a resposta é correta com base na lógica
-                })
-                .eq('id', id); // Filtra pela ID da resposta que deve ser atualizada
-
-            if (updateAnswerError) {
-                throw updateAnswerError;
-            }
-        }
-
-        res.status(200).json({ message: 'Pergunta e respostas atualizadas com sucesso!' });
-    } catch (err) {
-        console.error('Erro ao atualizar pergunta e respostas:', err);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 });
