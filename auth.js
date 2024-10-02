@@ -511,8 +511,7 @@ router.post('/createText', async (req, res) => {
         }
 
         res.status(201).json({
-            message: 'Texto criado com sucesso!',
-            text: newText,
+            message: 'Texto criado com sucesso!'
         });
     } catch (err) {
         console.error('Erro ao criar texto:', err);
