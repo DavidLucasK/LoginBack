@@ -230,6 +230,65 @@ router.post('/reset', async (req, res) => {
 
 // ------------------- Fim Endpoints do Login ------------------- //
 
+// Enviar solicitação
+router.post('/inviting/:userId/:partnerId', async (req, res) => {
+    const { userId, partnerId } = req.params;
+
+    try {
+        // Verificar se o partnerId existe na tabela profile_infos e se o campo partner é diferente de NULL
+        const { data: profileData, error: profileError } = await supabase
+            .from('profile_infos')
+            .select('partner')
+            .eq('id', partnerId)
+            .single(); // Retorna apenas um resultado
+
+        if (profileError) {
+            return res.status(404).json({ message: 'Erro ao buscar informações do parceiro' });
+        }
+
+        // Se o campo 'partner' não for null, significa que o usuário já possui um parceiro
+        if (profileData && profileData.partner !== null) {
+            return res.status(201).json({ message: 'Esse usuário já tem parceiro' });
+        }
+
+        // Inserir o novo invite na tabela 'invites'
+        const { data: inviteData, error: inviteError } = await supabase
+            .from('invites')
+            .insert([
+                {
+                    id_partner: partnerId,
+                    id_user_invite: userId,
+                    date: new Date().toISOString(), // Definir a data atual em formato ISO
+                }
+            ]);
+
+        if (inviteError) {
+            return res.status(404).json({ message: 'Invite não enviado' });
+        }
+
+        // Buscar todos os dados da tabela profile_infos para o userId
+        const { data: userProfileData, error: userProfileError } = await supabase
+            .from('profile_infos')
+            .select('*')
+            .eq('id', userId); // Substitua pelo campo correspondente se o id for diferente
+
+        if (userProfileError) {
+            return res.status(404).json({ message: 'Erro ao buscar informações do usuário' });
+        }
+
+        // Retornar os dados do invite e do perfil do usuário
+        res.status(200).json({ 
+            message: 'Invite enviado com sucesso', 
+            inviteData,
+            userProfileData 
+        });
+    } catch (err) {
+        console.error('Erro ao enviar invite:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
+
 
 // ------------------- Endpoints de Frases ------------------- //
 
