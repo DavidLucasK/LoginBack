@@ -258,6 +258,37 @@ router.get('/get-texts/:userId', async (req, res) => {
     }
 });
 
+// Endpoint para criar textos para parceiro
+router.post('/createText', async (req, res) => {
+    const { partnerId, textos1, textos2, textos3 } = req.body;
+
+    try {
+        // Inserir o novo texto na tabela texts
+        const { data: newText, error: textError } = await supabase
+            .from('texts')
+            .insert([
+                {
+                    user_id: partnerId,
+                    texto1: textos1,
+                    texto2: textos2,
+                    texto3: textos3,
+                }
+            ]);
+
+        if (textError) {
+            throw textError;
+        }
+
+        res.status(201).json({
+            message: 'Texto criado com sucesso!',
+            text: newText,
+        });
+    } catch (err) {
+        console.error('Erro ao criar texto:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 // Endpoint para excluir um texto
 router.delete('/deleteText/:idText', async (req, res) => {
     const { idText } = req.params;
