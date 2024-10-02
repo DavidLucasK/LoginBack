@@ -258,6 +258,29 @@ router.get('/get-texts/:userId', async (req, res) => {
     }
 });
 
+// Endpoint para excluir um texto
+router.delete('/deleteText/:idText', async (req, res) => {
+    const { idText } = req.params;
+
+    try {        
+        // Em seguida, exclui a pergunta
+        const { error: deleteTextError } = await supabase
+            .from('texts')
+            .delete()
+            .eq('id', idText); // Filtra pela pergunta a ser excluída
+
+        if (deleteTextError) {
+            throw deleteTextError;
+        }
+        
+
+        res.status(200).json({ message: 'Texto excluído com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao excluir texto:', err);
+        res.status(500).json({ message: 'Erro no servidor' });
+    }
+});
+
 // ------------------- Fim dos Endpoints de Frases ------------------- //
 
 // Grava o resgate feito pelo usuário na tabela resgates
