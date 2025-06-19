@@ -1,18 +1,26 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors({
-    origin: ['https://logindl.vercel.app', 'https://teamoma.vercel.app', 'https://loveuportfolio.vercel.app', 'http://127.0.0.1:5500']
-}));
+app.use(
+  cors({
+    origin: [
+      "https://logindl.vercel.app",
+      "https://teamoma.vercel.app",
+      "https://loveuportfolio.vercel.app",
+      "http://127.0.0.1:5500",
+      "http://localhost:8081",
+    ],
+  })
+);
 app.use(express.json());
 
-const authRoutes = require('./auth');
-app.use('/api/auth', authRoutes);
+const authRoutes = require("./auth");
+app.use("/api/auth", authRoutes);
 
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
