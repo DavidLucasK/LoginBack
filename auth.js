@@ -1579,25 +1579,36 @@ router.get("/post/:id", async (req, res) => {
 });
 
 router.post("/upload_post", async (req, res) => {
-  const { nome_foto, desc_foto, username } = req.body;
+  const { nome_foto, desc_foto, user } = req.body;
 
   if (!nome_foto) {
     return res.status(400).json({ error: "Nome da foto é necessário." });
   }
 
-  if (!username) {
-    return res.status(400).json({ error: "Username é necessário." });
+  if (!user) {
+    return res.status(400).json({ error: "User ID é necessário." });
   }
 
   try {
+    // Buscar o nome do usuário na tabela profile_infos
+    const { data: profileData, error: profileError } = await supabase
+      .from("profile_infos")
+      .select("name")
+      .eq("id", user)
+      .single();
+
+    if (profileError || !profileData) {
+      return res.status(404).json({ error: "Usuário não encontrado." });
+    }
+
     const now = new Date();
-    now.setHours(now.getHours() - 3); // Subtrai 3 horas
+    now.setHours(now.getHours() - 3); // Ajuste de timezone
     const adjustedDate = now.toISOString();
 
     const { data, error } = await supabase.from("posts").insert([
       {
         data: adjustedDate,
-        username: username,
+        username: profileData.name, // Aqui agora usa o nome real do usuário
         nome_foto: nome_foto,
         desc_foto: desc_foto,
         is_liked: false,
@@ -1610,6 +1621,7 @@ router.post("/upload_post", async (req, res) => {
 
     res.status(201).json({ message: "Post criado com sucesso!", data });
   } catch (error) {
+    console.error("Erro ao criar post:", error);
     res.status(500).json({ error: error.message });
   }
 });
