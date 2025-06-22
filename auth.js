@@ -451,14 +451,20 @@ router.get("/get-texts/:userId", async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const { data: dataTexts, error: errorText } = await supabase
+    const { data: texto, error } = await supabase
       .from("texts")
       .select("id, texto1, texto2, texto3")
       .eq("user_id", userId)
       .order("RANDOM()", { ascending: true })
-      .limit(1);
+      .limit(1)
+      .single(); // <- Aqui força o retorno como objeto único, não array
 
-    if (!dataTexts || dataTexts.length === 0) {
+    if (error) {
+      console.error(`Erro ao buscar texto para userId:${userId}`, error);
+      return res.status(500).json({ message: "Erro ao buscar texto", error });
+    }
+
+    if (!texto) {
       return res
         .status(404)
         .json({ message: "Nenhum texto encontrado para esse userId" });
@@ -466,13 +472,15 @@ router.get("/get-texts/:userId", async (req, res) => {
 
     return res.status(200).json({
       message: "Texto retornado com sucesso!",
-      texto: dataTexts[0],
+      texto,
     });
   } catch (err) {
-    console.error(`Erro ao pegar textos pro userId:${userId}`, err);
+    console.error(`Erro inesperado ao pegar texto para userId:${userId}`, err);
     res
       .status(500)
-      .json({ message: `Erro ao pegar textos pro userId:${userId}` });
+      .json({
+        message: `Erro inesperado ao pegar texto para userId:${userId}`,
+      });
   }
 });
 
