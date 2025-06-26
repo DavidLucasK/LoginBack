@@ -71,6 +71,7 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Buscar o usuário pelo e-mail
     const { data: user, error } = await supabase
       .from("users")
       .select("*")
@@ -86,20 +87,42 @@ router.post("/login", async (req, res) => {
     }
 
     if (!user) {
-      return res.status(400).json({ message: `Usuário ${user} não existe!` });
+      return res.status(400).json({ message: `Usuário ${email} não existe!` });
     }
 
+    // Verificar senha
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({ message: `Senha incorreta.` });
     }
 
+    // Buscar o partner da tabela profile_infos (ou outro nome que estiver usando)
+    const { data: profileInfo, error: partnerError } = await supabase
+      .from("profile_infos") // ajuste aqui conforme o nome da sua tabela
+      .select("partner")
+      .eq("id", user.id)
+      .single();
+
+    if (partnerError) {
+      console.error("Erro ao buscar partnerId:", partnerError);
+      return res
+        .status(500)
+        .json({ message: "Erro ao buscar dados do parceiro." });
+    }
+
+    // Gerar token
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    res.json({ token, userId: user.id, message: "Login bem-sucedido!" });
+    // Retornar os dados
+    res.json({
+      token,
+      userId: user.id,
+      partnerId: profileInfo.partner, // <-- Aqui está a inclusão
+      message: "Login bem-sucedido!",
+    });
   } catch (err) {
     console.error("Erro ao fazer login:", err);
     res.status(500).json({ message: "Erro no servidor" });
