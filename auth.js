@@ -1188,12 +1188,14 @@ router.post("/createQuestion", async (req, res) => {
 router.delete("/deleteQuestion/:idPergunta", async (req, res) => {
   const { idPergunta } = req.params;
 
+  const questionId = Number(idPergunta);
+
   try {
     // Primeiro, exclui as respostas associadas à pergunta
     const { error: deleteAnswersError } = await supabase
       .from("respostas")
       .delete()
-      .eq("pergunta_id", idPergunta); // Filtra as respostas pela pergunta
+      .eq("pergunta_id", questionId); // Filtra as respostas pela pergunta
 
     if (deleteAnswersError) {
       throw deleteAnswersError;
